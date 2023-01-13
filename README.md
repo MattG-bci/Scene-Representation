@@ -17,8 +17,7 @@ git clone https://github.com/MattG-bci/Scene-Representation
 
 ```bash
 
-python3 -m  project.tests.test_performance
-
+python3 -m project.tests.test_performance
 
 ```
 
