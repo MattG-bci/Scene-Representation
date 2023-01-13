@@ -12,8 +12,8 @@ from lightly.models.utils import batch_shuffle
 from lightly.models.utils import batch_unshuffle
 
 
-path_to_train = 'Scene-representation/datasets/cifar10/train/'
-path_to_test = 'Scene-representation/datasets/cifar10/test/'
+path_to_train = 'project/datasets/cifar10/train/'
+path_to_test = 'project/datasets/cifar10/test/'
 
 
 num_workers = 8
