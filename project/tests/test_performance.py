@@ -7,7 +7,7 @@ import torch.optim as optim
 import time
 
 
-device = torch.device("mps")
+device = torch.device("cpu")
 print(device)
 
 transform = transforms.Compose(
@@ -25,8 +25,8 @@ path_test_data = '/Users/matt/Desktop/Scene-Representation/project/datasets/cifa
 train_dataset = torchvision.datasets.ImageFolder(path_train_data, transform=transform)
 test_dataset = torchvision.datasets.ImageFolder(path_test_data, transform=transform)
 
-train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=2)
-test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=2)
+train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=2)
+test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=2)
 
 
 class Net(nn.Module):
@@ -53,7 +53,7 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
 
-    for epoch in range(2):  # loop over the dataset multiple times
+    for epoch in range(1):  # loop over the dataset multiple times
 
         running_loss = 0.0
         for i, data in enumerate(train_dataloader, 0):

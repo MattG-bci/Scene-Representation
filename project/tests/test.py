@@ -232,7 +232,7 @@ def main():
     model = MoCo()
 
     gpus = 1 if torch.backends.mps.is_available() else 0
-    trainer = pl.Trainer(max_epochs=max_epochs, gpus=gpus, accelerator="mps")
+    trainer = pl.Trainer(max_epochs=max_epochs, devices=gpus, accelerator="mps")
     trainer.fit(
         model,
         dataloader_train_moco
