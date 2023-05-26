@@ -68,8 +68,8 @@ class BYOL(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
         momentum = self._cosine_scheduler(self.current_epoch, 10, 0.996, 1)
-        self._update_momentum(self.backbone, self.backbone_momentum, m=momentum)
-        self._update_momentum(self.projection_head, self.projection_momentum, m=momentum)
+        self._update_momentum(self.backbone, self.backbone_momentum, tau=momentum)
+        self._update_momentum(self.projection_head, self.projection_momentum, tau=momentum)
         (x0, x1), _, _ = batch
         p0 = self.forward(x0)
         z0 = self.forward_momentum(x0)
@@ -84,5 +84,4 @@ class BYOL(pl.LightningModule):
 
 
 
-model = BYOL()
 
