@@ -1,6 +1,6 @@
 _base_ = [
-    '../config/datasets/nus-mono3d.py', '../config/models/fcos3d.py',
-    '../config/schedules/mmdet-schedule-1x.py', '../config/default_runtime.py'
+    '../configs/fcos3d/nus-mono3d.py', '../configs/fcos3d/fcos3d.py',
+    '../configs/fcos3d/mmdet-schedule-1x.py', '../configs/fcos3d/default_runtime.py'
 ]
 # model settings
 model = dict(
