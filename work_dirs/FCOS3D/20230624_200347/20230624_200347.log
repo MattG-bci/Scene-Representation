@@ -1,0 +1,1967 @@
+2023/06/24 20:03:48 - mmengine - INFO - 
+------------------------------------------------------------
+System environment:
+    sys.platform: linux
+    Python: 3.9.4 | packaged by conda-forge | (default, May 10 2021, 22:13:33) [GCC 9.3.0]
+    CUDA available: True
+    numpy_random_seed: 630701755
+    GPU 0: NVIDIA A10G
+    CUDA_HOME: /usr/local/cuda
+    NVCC: Cuda compilation tools, release 11.5, V11.5.119
+    GCC: gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+    PyTorch: 2.0.1+cu117
+    PyTorch compiling details: PyTorch built with:
+  - GCC 9.3
+  - C++ Version: 201703
+  - Intel(R) oneAPI Math Kernel Library Version 2022.2-Product Build 20220804 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.7.3 (Git Hash 6dbeffbae1f23cbbeae17adb7b5b13f1f37c080e)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.7
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86
+  - CuDNN 8.4  (built against CUDA 11.6)
+    - Built with CuDNN 8.5
+  - Magma 2.6.1
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.7, CUDNN_VERSION=8.5.0, CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/c++, CXX_FLAGS= -D_GLIBCXX_USE_CXX11_ABI=0 -fabi-version=11 -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -DNDEBUG -DUSE_KINETO -DLIBKINETO_NOROCTRACER -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -O2 -fPIC -Wall -Wextra -Werror=return-type -Werror=non-virtual-dtor -Werror=bool-operation -Wnarrowing -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wunused-local-typedefs -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Werror=cast-function-type -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_DISABLE_GPU_ASSERTS=ON, TORCH_VERSION=2.0.1, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=1, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, 
+
+    TorchVision: 0.15.2+cu117
+    OpenCV: 4.7.0
+    MMEngine: 0.7.4
+
+Runtime environment:
+    cudnn_benchmark: False
+    mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 0}
+    dist_cfg: {'backend': 'nccl'}
+    seed: 630701755
+    Distributed launcher: none
+    Distributed training: False
+    GPU number: 1
+------------------------------------------------------------
+
+2023/06/24 20:03:48 - mmengine - INFO - Config:
+dataset_type = 'NuScenesDataset'
+data_root = '/home/efs/users/mateusz/data/nuscenes/'
+class_names = [
+    'car', 'truck', 'trailer', 'bus', 'construction_vehicle', 'bicycle',
+    'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
+]
+metainfo = dict(classes=[
+    'car', 'truck', 'trailer', 'bus', 'construction_vehicle', 'bicycle',
+    'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
+])
+input_modality = dict(use_lidar=False, use_camera=True)
+backend_args = None
+train_pipeline = [
+    dict(type='LoadImageFromFileMono3D', backend_args=None),
+    dict(
+        type='LoadAnnotations3D',
+        with_bbox=True,
+        with_label=True,
+        with_attr_label=True,
+        with_bbox_3d=True,
+        with_label_3d=True,
+        with_bbox_depth=True),
+    dict(type='mmdet.Resize', scale=(1600, 900), keep_ratio=True),
+    dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
+    dict(
+        type='Pack3DDetInputs',
+        keys=[
+            'img', 'gt_bboxes', 'gt_bboxes_labels', 'attr_labels',
+            'gt_bboxes_3d', 'gt_labels_3d', 'centers_2d', 'depths'
+        ])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFileMono3D', backend_args=None),
+    dict(type='mmdet.Resize', scale_factor=1.0),
+    dict(type='Pack3DDetInputs', keys=['img'])
+]
+train_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    dataset=dict(
+        type='NuScenesDataset',
+        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_prefix=dict(
+            pts='',
+            CAM_FRONT='samples/CAM_FRONT',
+            CAM_FRONT_LEFT='samples/CAM_FRONT_LEFT',
+            CAM_FRONT_RIGHT='samples/CAM_FRONT_RIGHT',
+            CAM_BACK='samples/CAM_BACK',
+            CAM_BACK_RIGHT='samples/CAM_BACK_RIGHT',
+            CAM_BACK_LEFT='samples/CAM_BACK_LEFT'),
+        ann_file='nuscenes_infos_train.pkl',
+        load_type='mv_image_based',
+        pipeline=[
+            dict(type='LoadImageFromFileMono3D', backend_args=None),
+            dict(
+                type='LoadAnnotations3D',
+                with_bbox=True,
+                with_label=True,
+                with_attr_label=True,
+                with_bbox_3d=True,
+                with_label_3d=True,
+                with_bbox_depth=True),
+            dict(type='mmdet.Resize', scale=(1600, 900), keep_ratio=True),
+            dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
+            dict(
+                type='Pack3DDetInputs',
+                keys=[
+                    'img', 'gt_bboxes', 'gt_bboxes_labels', 'attr_labels',
+                    'gt_bboxes_3d', 'gt_labels_3d', 'centers_2d', 'depths'
+                ])
+        ],
+        metainfo=dict(classes=[
+            'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
+            'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
+        ]),
+        modality=dict(use_lidar=False, use_camera=True),
+        test_mode=False,
+        box_type_3d='Camera',
+        use_valid_flag=True,
+        backend_args=None))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='NuScenesDataset',
+        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_prefix=dict(
+            pts='',
+            CAM_FRONT='samples/CAM_FRONT',
+            CAM_FRONT_LEFT='samples/CAM_FRONT_LEFT',
+            CAM_FRONT_RIGHT='samples/CAM_FRONT_RIGHT',
+            CAM_BACK='samples/CAM_BACK',
+            CAM_BACK_RIGHT='samples/CAM_BACK_RIGHT',
+            CAM_BACK_LEFT='samples/CAM_BACK_LEFT'),
+        ann_file='nuscenes_infos_val.pkl',
+        load_type='mv_image_based',
+        pipeline=[
+            dict(type='LoadImageFromFileMono3D', backend_args=None),
+            dict(type='mmdet.Resize', scale_factor=1.0),
+            dict(type='Pack3DDetInputs', keys=['img'])
+        ],
+        modality=dict(use_lidar=False, use_camera=True),
+        metainfo=dict(classes=[
+            'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
+            'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
+        ]),
+        test_mode=True,
+        box_type_3d='Camera',
+        use_valid_flag=True,
+        backend_args=None))
+test_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='NuScenesDataset',
+        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_prefix=dict(
+            pts='',
+            CAM_FRONT='samples/CAM_FRONT',
+            CAM_FRONT_LEFT='samples/CAM_FRONT_LEFT',
+            CAM_FRONT_RIGHT='samples/CAM_FRONT_RIGHT',
+            CAM_BACK='samples/CAM_BACK',
+            CAM_BACK_RIGHT='samples/CAM_BACK_RIGHT',
+            CAM_BACK_LEFT='samples/CAM_BACK_LEFT'),
+        ann_file='nuscenes_infos_val.pkl',
+        load_type='mv_image_based',
+        pipeline=[
+            dict(type='LoadImageFromFileMono3D', backend_args=None),
+            dict(type='mmdet.Resize', scale_factor=1.0),
+            dict(type='Pack3DDetInputs', keys=['img'])
+        ],
+        modality=dict(use_lidar=False, use_camera=True),
+        metainfo=dict(classes=[
+            'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
+            'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
+        ]),
+        test_mode=True,
+        box_type_3d='Camera',
+        use_valid_flag=True,
+        backend_args=None))
+val_evaluator = dict(
+    type='NuScenesMetric',
+    data_root='/home/efs/users/mateusz/data/nuscenes/',
+    ann_file='/home/efs/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    metric='bbox',
+    backend_args=None)
+test_evaluator = dict(
+    type='NuScenesMetric',
+    data_root='/home/efs/users/mateusz/data/nuscenes/',
+    ann_file='/home/efs/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    metric='bbox',
+    backend_args=None)
+vis_backends = [dict(type='LocalVisBackend')]
+visualizer = dict(
+    type='Det3DLocalVisualizer',
+    vis_backends=[dict(type='LocalVisBackend')],
+    name='visualizer')
+model = dict(
+    type='FCOSMono3D',
+    data_preprocessor=dict(
+        type='Det3DDataPreprocessor',
+        mean=[103.53, 116.28, 123.675],
+        std=[1.0, 1.0, 1.0],
+        bgr_to_rgb=False,
+        pad_size_divisor=32),
+    backbone=dict(
+        type='mmdet.ResNet',
+        depth=101,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=False),
+        norm_eval=True,
+        style='caffe',
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='open-mmlab://detectron2/resnet101_caffe'),
+        dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
+        stage_with_dcn=(False, False, True, True)),
+    neck=dict(
+        type='mmdet.FPN',
+        in_channels=[256, 512, 1024, 2048],
+        out_channels=256,
+        start_level=1,
+        add_extra_convs='on_output',
+        num_outs=5,
+        relu_before_extra_convs=True),
+    bbox_head=dict(
+        type='FCOSMono3DHead',
+        num_classes=10,
+        in_channels=256,
+        stacked_convs=2,
+        feat_channels=256,
+        use_direction_classifier=True,
+        diff_rad_by_sin=True,
+        pred_attrs=True,
+        pred_velo=True,
+        dir_offset=0.7854,
+        dir_limit_offset=0,
+        strides=[8, 16, 32, 64, 128],
+        group_reg_dims=(2, 1, 3, 1, 2),
+        cls_branch=(256, ),
+        reg_branch=((256, ), (256, ), (256, ), (256, ), ()),
+        dir_branch=(256, ),
+        attr_branch=(256, ),
+        loss_cls=dict(
+            type='mmdet.FocalLoss',
+            use_sigmoid=True,
+            gamma=2.0,
+            alpha=0.25,
+            loss_weight=1.0),
+        loss_bbox=dict(
+            type='mmdet.SmoothL1Loss',
+            beta=0.1111111111111111,
+            loss_weight=1.0),
+        loss_dir=dict(
+            type='mmdet.CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+        loss_attr=dict(
+            type='mmdet.CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+        loss_centerness=dict(
+            type='mmdet.CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+        bbox_coder=dict(type='FCOS3DBBoxCoder', code_size=9),
+        norm_on_bbox=True,
+        centerness_on_reg=True,
+        center_sampling=True,
+        conv_bias=True,
+        dcn_on_last_conv=True),
+    train_cfg=dict(
+        allowed_border=0,
+        code_weight=[1.0, 1.0, 0.2, 1.0, 1.0, 1.0, 1.0, 0.05, 0.05],
+        pos_weight=-1,
+        debug=False),
+    test_cfg=dict(
+        use_rotate_nms=True,
+        nms_across_levels=False,
+        nms_pre=1000,
+        nms_thr=0.8,
+        score_thr=0.05,
+        min_bbox_size=0,
+        max_per_img=200))
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_interval=1)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+param_scheduler = [
+    dict(
+        type='LinearLR',
+        start_factor=0.3333333333333333,
+        by_epoch=False,
+        begin=0,
+        end=500),
+    dict(
+        type='MultiStepLR',
+        begin=0,
+        end=12,
+        by_epoch=True,
+        milestones=[8, 11],
+        gamma=0.1)
+]
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001),
+    paramwise_cfg=dict(bias_lr_mult=2.0, bias_decay_mult=0.0),
+    clip_grad=dict(max_norm=35, norm_type=2))
+auto_scale_lr = dict(enable=False, base_batch_size=16)
+default_scope = 'mmdet3d'
+default_hooks = dict(
+    timer=dict(type='IterTimerHook'),
+    logger=dict(type='LoggerHook', interval=50),
+    param_scheduler=dict(type='ParamSchedulerHook'),
+    checkpoint=dict(type='CheckpointHook', interval=-1),
+    sampler_seed=dict(type='DistSamplerSeedHook'),
+    visualization=dict(type='Det3DVisualizationHook'))
+env_cfg = dict(
+    cudnn_benchmark=False,
+    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
+    dist_cfg=dict(backend='nccl'))
+log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
+log_level = 'INFO'
+load_from = None
+resume = False
+launcher = 'none'
+work_dir = './work_dirs/FCOS3D'
+
+2023/06/24 20:03:53 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
+2023/06/24 20:03:53 - mmengine - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+before_train:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) DistSamplerSeedHook                
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) IterTimerHook                      
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_val_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_val_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) Det3DVisualizationHook             
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_val_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+after_train:
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_test_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_test_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_test_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) Det3DVisualizationHook             
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_test_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_run:
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+2023/06/24 20:03:55 - mmengine - INFO - ------------------------------
+2023/06/24 20:03:55 - mmengine - INFO - The length of the dataset: 1452
+2023/06/24 20:03:55 - mmengine - INFO - The number of instances per category in the dataset:
++----------------------+--------+
+| category             | number |
++----------------------+--------+
+| car                  | 4894   |
+| truck                | 561    |
+| trailer              | 22     |
+| bus                  | 369    |
+| construction_vehicle | 247    |
+| bicycle              | 183    |
+| motorcycle           | 231    |
+| pedestrian           | 3374   |
+| traffic_cone         | 1527   |
+| barrier              | 1972   |
++----------------------+--------+
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.lateral_convs.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.lateral_convs.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.lateral_convs.1.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.lateral_convs.1.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.lateral_convs.2.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.lateral_convs.2.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.1.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.1.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.2.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.2.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.3.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.3.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.4.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- neck.fpn_convs.4.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.cls_convs.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.cls_convs.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.cls_convs.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.cls_convs.1.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.cls_convs.1.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.cls_convs.1.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.reg_convs.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.reg_convs.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.reg_convs.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.reg_convs.1.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.reg_convs.1.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.reg_convs.1.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_cls_prev.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_cls_prev.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_cls_prev.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_cls.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_cls.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.0.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.0.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.0.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.1.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.1.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.1.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.2.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.2.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.2.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.3.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.3.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_reg_prevs.3.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.0.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.0.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.1.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.1.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.2.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.2.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.3.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.3.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.4.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_regs.4.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_dir_cls_prev.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_dir_cls_prev.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_dir_cls_prev.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_dir_cls.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_dir_cls.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_attr_prev.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_attr_prev.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_attr_prev.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_attr.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_attr.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_centerness_prev.0.conv.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_centerness_prev.0.conv.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_centerness_prev.0.gn.bias:weight_decay=0.0
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_centerness.bias:lr=0.004
+2023/06/24 20:03:55 - mmengine - INFO - paramwise_options -- bbox_head.conv_centerness.bias:weight_decay=0.0
+2023/06/24 20:03:56 - mmengine - INFO - ------------------------------
+2023/06/24 20:03:56 - mmengine - INFO - The length of the dataset: 972
+2023/06/24 20:03:56 - mmengine - INFO - The number of instances per category in the dataset:
++----------------------+--------+
+| category             | number |
++----------------------+--------+
+| car                  | 4543   |
+| truck                | 321    |
+| trailer              | 41     |
+| bus                  | 166    |
+| construction_vehicle | 0      |
+| bicycle              | 91     |
+| motorcycle           | 312    |
+| pedestrian           | 2293   |
+| traffic_cone         | 47     |
+| barrier              | 720    |
++----------------------+--------+
+2023/06/24 20:03:56 - mmengine - INFO - load model from: open-mmlab://detectron2/resnet101_caffe
+2023/06/24 20:03:56 - mmengine - INFO - Loads checkpoint by openmmlab backend from path: open-mmlab://detectron2/resnet101_caffe
+2023/06/24 20:04:05 - mmengine - WARNING - The model and loaded state dict do not match exactly
+
+missing keys in source state_dict: layer3.0.conv2.conv_offset.weight, layer3.0.conv2.conv_offset.bias, layer3.1.conv2.conv_offset.weight, layer3.1.conv2.conv_offset.bias, layer3.2.conv2.conv_offset.weight, layer3.2.conv2.conv_offset.bias, layer3.3.conv2.conv_offset.weight, layer3.3.conv2.conv_offset.bias, layer3.4.conv2.conv_offset.weight, layer3.4.conv2.conv_offset.bias, layer3.5.conv2.conv_offset.weight, layer3.5.conv2.conv_offset.bias, layer3.6.conv2.conv_offset.weight, layer3.6.conv2.conv_offset.bias, layer3.7.conv2.conv_offset.weight, layer3.7.conv2.conv_offset.bias, layer3.8.conv2.conv_offset.weight, layer3.8.conv2.conv_offset.bias, layer3.9.conv2.conv_offset.weight, layer3.9.conv2.conv_offset.bias, layer3.10.conv2.conv_offset.weight, layer3.10.conv2.conv_offset.bias, layer3.11.conv2.conv_offset.weight, layer3.11.conv2.conv_offset.bias, layer3.12.conv2.conv_offset.weight, layer3.12.conv2.conv_offset.bias, layer3.13.conv2.conv_offset.weight, layer3.13.conv2.conv_offset.bias, layer3.14.conv2.conv_offset.weight, layer3.14.conv2.conv_offset.bias, layer3.15.conv2.conv_offset.weight, layer3.15.conv2.conv_offset.bias, layer3.16.conv2.conv_offset.weight, layer3.16.conv2.conv_offset.bias, layer3.17.conv2.conv_offset.weight, layer3.17.conv2.conv_offset.bias, layer3.18.conv2.conv_offset.weight, layer3.18.conv2.conv_offset.bias, layer3.19.conv2.conv_offset.weight, layer3.19.conv2.conv_offset.bias, layer3.20.conv2.conv_offset.weight, layer3.20.conv2.conv_offset.bias, layer3.21.conv2.conv_offset.weight, layer3.21.conv2.conv_offset.bias, layer3.22.conv2.conv_offset.weight, layer3.22.conv2.conv_offset.bias, layer4.0.conv2.conv_offset.weight, layer4.0.conv2.conv_offset.bias, layer4.1.conv2.conv_offset.weight, layer4.1.conv2.conv_offset.bias, layer4.2.conv2.conv_offset.weight, layer4.2.conv2.conv_offset.bias
+
+Name of parameter - Initialization information
+
+backbone.conv1.weight - torch.Size([64, 3, 7, 7]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.conv1.weight - torch.Size([64, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.downsample.0.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.downsample.1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.0.downsample.1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.1.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer1.2.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.conv1.weight - torch.Size([128, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.downsample.0.weight - torch.Size([512, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.downsample.1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.0.downsample.1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.1.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.2.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer2.3.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.conv1.weight - torch.Size([256, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.0.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.0.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.downsample.0.weight - torch.Size([1024, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.downsample.1.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.0.downsample.1.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.1.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.1.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.1.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.2.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.2.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.2.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.3.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.3.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.3.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.4.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.4.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.4.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.5.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.5.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.5.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.6.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.6.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.6.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.7.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.7.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.7.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.8.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.8.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.8.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.9.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.9.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.9.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.10.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.10.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.10.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.11.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.11.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.11.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.12.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.12.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.12.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.13.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.13.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.13.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.14.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.14.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.14.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.15.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.15.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.15.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.16.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.16.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.16.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.17.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.17.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.17.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.18.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.18.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.18.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.19.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.19.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.19.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.20.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.20.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.20.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.21.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.21.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.21.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.conv2.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.22.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer3.22.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer3.22.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.conv1.weight - torch.Size([512, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.conv2.conv_offset.weight - torch.Size([27, 512, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer4.0.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer4.0.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.downsample.0.weight - torch.Size([2048, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.downsample.1.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.0.downsample.1.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.conv2.conv_offset.weight - torch.Size([27, 512, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer4.1.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer4.1.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.1.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.conv2.conv_offset.weight - torch.Size([27, 512, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer4.2.conv2.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+backbone.layer4.2.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+backbone.layer4.2.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet101_caffe 
+
+neck.lateral_convs.0.conv.weight - torch.Size([256, 512, 1, 1]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.lateral_convs.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+neck.lateral_convs.1.conv.weight - torch.Size([256, 1024, 1, 1]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.lateral_convs.1.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+neck.lateral_convs.2.conv.weight - torch.Size([256, 2048, 1, 1]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.lateral_convs.2.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+neck.fpn_convs.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+neck.fpn_convs.1.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.1.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+neck.fpn_convs.2.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.2.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+neck.fpn_convs.3.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.3.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+neck.fpn_convs.4.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.4.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.cls_convs.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.1.conv.weight - torch.Size([256, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.1.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.1.conv.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.1.conv.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.1.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.cls_convs.1.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.reg_convs.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.1.conv.weight - torch.Size([256, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.1.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.1.conv.conv_offset.weight - torch.Size([27, 256, 3, 3]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.1.conv.conv_offset.bias - torch.Size([27]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.1.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.reg_convs.1.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_cls_prev.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_cls_prev.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_cls_prev.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_cls_prev.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_cls.weight - torch.Size([10, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_cls.bias - torch.Size([10]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_reg_prevs.0.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_reg_prevs.0.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.0.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.0.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.1.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_reg_prevs.1.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.1.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.1.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.2.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_reg_prevs.2.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.2.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.2.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.3.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_reg_prevs.3.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.3.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_reg_prevs.3.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_regs.0.weight - torch.Size([2, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.0.bias - torch.Size([2]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.1.weight - torch.Size([1, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.1.bias - torch.Size([1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.2.weight - torch.Size([3, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.2.bias - torch.Size([3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.3.weight - torch.Size([1, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.3.bias - torch.Size([1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.4.weight - torch.Size([2, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_regs.4.bias - torch.Size([2]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_dir_cls_prev.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_dir_cls_prev.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_dir_cls_prev.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_dir_cls_prev.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_dir_cls.weight - torch.Size([2, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_dir_cls.bias - torch.Size([2]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_attr_prev.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_attr_prev.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_attr_prev.0.gn.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_attr_prev.0.gn.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_attr.weight - torch.Size([9, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_attr.bias - torch.Size([9]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_centerness_prev.0.conv.weight - torch.Size([64, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_centerness_prev.0.conv.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_centerness_prev.0.gn.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_centerness_prev.0.gn.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.conv_centerness.weight - torch.Size([1, 64, 1, 1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.conv_centerness.bias - torch.Size([1]): 
+Initialized by user-defined `init_weights` in FCOSMono3DHead  
+
+bbox_head.scales.0.0.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.0.1.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.0.2.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.1.0.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.1.1.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.1.2.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.2.0.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.2.1.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.2.2.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.3.0.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.3.1.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.3.2.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.4.0.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.4.1.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+
+bbox_head.scales.4.2.scale - torch.Size([]): 
+The value is the same before and after calling `init_weights` of FCOSMono3D  
+2023/06/24 20:04:05 - mmengine - WARNING - "FileClient" will be deprecated in future. Please use io functions in https://mmengine.readthedocs.io/en/latest/api/fileio.html#file-io
+2023/06/24 20:04:05 - mmengine - WARNING - "HardDiskBackend" is the alias of "LocalBackend" and the former will be deprecated in future.
+2023/06/24 20:04:05 - mmengine - INFO - Checkpoints will be saved to /home/efs/users/mateusz/Scene-Representation/work_dirs/FCOS3D.
+2023/06/24 20:04:26 - mmengine - INFO - Epoch(train)  [1][  50/1452]  lr: 7.9760e-04  eta: 2:00:07  time: 0.4149  data_time: 0.0072  memory: 4101  grad_norm: 79.6500  loss: 13.6404  loss_cls: 0.9426  loss_offset: 1.4605  loss_depth: 3.3384  loss_size: 3.7870  loss_rotsin: 0.6264  loss_centerness: 0.6378  loss_velo: 0.1545  loss_dir: 0.6990  loss_attr: 1.9943
+2023/06/24 20:04:43 - mmengine - INFO - Epoch(train)  [1][ 100/1452]  lr: 9.3120e-04  eta: 1:50:58  time: 0.3538  data_time: 0.0062  memory: 4145  grad_norm: 50.7734  loss: 12.5202  loss_cls: 0.8552  loss_offset: 1.4450  loss_depth: 2.8710  loss_size: 3.4576  loss_rotsin: 0.5196  loss_centerness: 0.6000  loss_velo: 0.1599  loss_dir: 0.7240  loss_attr: 1.8880
+2023/06/24 20:05:01 - mmengine - INFO - Epoch(train)  [1][ 150/1452]  lr: 1.0648e-03  eta: 1:47:45  time: 0.3542  data_time: 0.0061  memory: 4180  grad_norm: 84.8849  loss: 14.2808  loss_cls: 0.8490  loss_offset: 1.4579  loss_depth: 3.4202  loss_size: 4.6302  loss_rotsin: 0.5532  loss_centerness: 0.5993  loss_velo: 0.1964  loss_dir: 0.7338  loss_attr: 1.8408
+2023/06/24 20:05:19 - mmengine - INFO - Epoch(train)  [1][ 200/1452]  lr: 1.1984e-03  eta: 1:46:03  time: 0.3549  data_time: 0.0061  memory: 4170  grad_norm: 35.7619  loss: 13.2124  loss_cls: 0.8559  loss_offset: 1.4493  loss_depth: 3.2696  loss_size: 3.6960  loss_rotsin: 0.5708  loss_centerness: 0.5974  loss_velo: 0.1095  loss_dir: 0.7269  loss_attr: 1.9372
+2023/06/24 20:05:37 - mmengine - INFO - Epoch(train)  [1][ 250/1452]  lr: 1.3320e-03  eta: 1:44:53  time: 0.3545  data_time: 0.0061  memory: 4096  grad_norm: 37.2390  loss: 12.7719  loss_cls: 0.8375  loss_offset: 1.4728  loss_depth: 2.9920  loss_size: 3.6729  loss_rotsin: 0.5426  loss_centerness: 0.5947  loss_velo: 0.1252  loss_dir: 0.7267  loss_attr: 1.8076
+2023/06/24 20:05:54 - mmengine - INFO - Epoch(train)  [1][ 300/1452]  lr: 1.4656e-03  eta: 1:44:02  time: 0.3550  data_time: 0.0064  memory: 4027  grad_norm: 65.0812  loss: 12.2287  loss_cls: 0.8776  loss_offset: 1.4078  loss_depth: 2.5972  loss_size: 3.6565  loss_rotsin: 0.5727  loss_centerness: 0.5899  loss_velo: 0.1287  loss_dir: 0.6991  loss_attr: 1.6993
+2023/06/24 20:06:12 - mmengine - INFO - Epoch(train)  [1][ 350/1452]  lr: 1.5992e-03  eta: 1:43:22  time: 0.3557  data_time: 0.0070  memory: 4109  grad_norm: 34.3272  loss: 13.5565  loss_cls: 0.8547  loss_offset: 1.4646  loss_depth: 3.9488  loss_size: 3.3569  loss_rotsin: 0.6186  loss_centerness: 0.5984  loss_velo: 0.2463  loss_dir: 0.7290  loss_attr: 1.7391
+2023/06/24 20:06:30 - mmengine - INFO - Epoch(train)  [1][ 400/1452]  lr: 1.7328e-03  eta: 1:42:46  time: 0.3551  data_time: 0.0063  memory: 4179  grad_norm: 68212.3354  loss: 514.2369  loss_cls: 0.8451  loss_offset: 1.4823  loss_depth: 503.8029  loss_size: 4.2334  loss_rotsin: 0.5382  loss_centerness: 0.6003  loss_velo: 0.1836  loss_dir: 0.8015  loss_attr: 1.7496
+2023/06/24 20:06:48 - mmengine - INFO - Epoch(train)  [1][ 450/1452]  lr: 1.8664e-03  eta: 1:42:17  time: 0.3563  data_time: 0.0061  memory: 4157  grad_norm: 28.9744  loss: 14.0235  loss_cls: 0.8955  loss_offset: 1.4293  loss_depth: 4.0226  loss_size: 3.6319  loss_rotsin: 0.5692  loss_centerness: 0.6003  loss_velo: 0.1238  loss_dir: 0.7083  loss_attr: 2.0426
+2023/06/24 20:07:05 - mmengine - INFO - Epoch(train)  [1][ 500/1452]  lr: 2.0000e-03  eta: 1:41:48  time: 0.3553  data_time: 0.0063  memory: 4126  grad_norm: 25.4783  loss: 12.1415  loss_cls: 0.8926  loss_offset: 1.4109  loss_depth: 2.8659  loss_size: 3.3854  loss_rotsin: 0.5419  loss_centerness: 0.5860  loss_velo: 0.1537  loss_dir: 0.6751  loss_attr: 1.6299
+2023/06/24 20:07:23 - mmengine - INFO - Epoch(train)  [1][ 550/1452]  lr: 2.0000e-03  eta: 1:41:22  time: 0.3553  data_time: 0.0059  memory: 4157  grad_norm: 39.5012  loss: 12.1406  loss_cls: 0.9138  loss_offset: 1.3932  loss_depth: 2.9048  loss_size: 3.0600  loss_rotsin: 0.5887  loss_centerness: 0.5918  loss_velo: 0.1873  loss_dir: 0.6702  loss_attr: 1.8307
+2023/06/24 20:07:41 - mmengine - INFO - Epoch(train)  [1][ 600/1452]  lr: 2.0000e-03  eta: 1:40:56  time: 0.3549  data_time: 0.0061  memory: 4201  grad_norm: 29.5964  loss: 12.5121  loss_cls: 0.7856  loss_offset: 1.4228  loss_depth: 2.8403  loss_size: 3.6430  loss_rotsin: 0.5791  loss_centerness: 0.6016  loss_velo: 0.1511  loss_dir: 0.7375  loss_attr: 1.7510
+2023/06/24 20:07:59 - mmengine - INFO - Epoch(train)  [1][ 650/1452]  lr: 2.0000e-03  eta: 1:40:30  time: 0.3538  data_time: 0.0061  memory: 4104  grad_norm: 28.5750  loss: 13.4661  loss_cls: 0.8587  loss_offset: 1.3944  loss_depth: 3.6664  loss_size: 3.8372  loss_rotsin: 0.5554  loss_centerness: 0.5893  loss_velo: 0.1774  loss_dir: 0.6912  loss_attr: 1.6962
+2023/06/24 20:08:16 - mmengine - INFO - Epoch(train)  [1][ 700/1452]  lr: 2.0000e-03  eta: 1:40:04  time: 0.3529  data_time: 0.0058  memory: 4161  grad_norm: 29.8270  loss: 12.3865  loss_cls: 0.8342  loss_offset: 1.4300  loss_depth: 2.7697  loss_size: 3.4224  loss_rotsin: 0.5963  loss_centerness: 0.5844  loss_velo: 0.2073  loss_dir: 0.6785  loss_attr: 1.8636
+2023/06/24 20:08:34 - mmengine - INFO - Epoch(train)  [1][ 750/1452]  lr: 2.0000e-03  eta: 1:39:39  time: 0.3526  data_time: 0.0063  memory: 4090  grad_norm: 19.9943  loss: 13.1228  loss_cls: 0.9279  loss_offset: 1.3981  loss_depth: 3.4508  loss_size: 3.6349  loss_rotsin: 0.5715  loss_centerness: 0.5899  loss_velo: 0.1535  loss_dir: 0.6743  loss_attr: 1.7219
+2023/06/24 20:08:52 - mmengine - INFO - Epoch(train)  [1][ 800/1452]  lr: 2.0000e-03  eta: 1:39:16  time: 0.3543  data_time: 0.0084  memory: 4187  grad_norm: 24.6089  loss: 13.3766  loss_cls: 0.8760  loss_offset: 1.4008  loss_depth: 4.2140  loss_size: 3.2257  loss_rotsin: 0.5788  loss_centerness: 0.5856  loss_velo: 0.1624  loss_dir: 0.7037  loss_attr: 1.6296
+2023/06/24 20:09:09 - mmengine - INFO - Epoch(train)  [1][ 850/1452]  lr: 2.0000e-03  eta: 1:38:53  time: 0.3521  data_time: 0.0058  memory: 4143  grad_norm: 26.3295  loss: 13.7017  loss_cls: 0.9626  loss_offset: 1.4061  loss_depth: 4.5106  loss_size: 3.2137  loss_rotsin: 0.5645  loss_centerness: 0.6007  loss_velo: 0.1908  loss_dir: 0.7234  loss_attr: 1.5292
+2023/06/24 20:09:27 - mmengine - INFO - Epoch(train)  [1][ 900/1452]  lr: 2.0000e-03  eta: 1:38:29  time: 0.3517  data_time: 0.0058  memory: 4139  grad_norm: 29.1639  loss: 12.6943  loss_cls: 0.9925  loss_offset: 1.3958  loss_depth: 3.4539  loss_size: 3.0228  loss_rotsin: 0.6265  loss_centerness: 0.5885  loss_velo: 0.1142  loss_dir: 0.7084  loss_attr: 1.7916
+2023/06/24 20:09:44 - mmengine - INFO - Epoch(train)  [1][ 950/1452]  lr: 2.0000e-03  eta: 1:38:06  time: 0.3519  data_time: 0.0058  memory: 4090  grad_norm: 24.2789  loss: 12.6388  loss_cls: 0.9749  loss_offset: 1.3420  loss_depth: 3.8271  loss_size: 2.9497  loss_rotsin: 0.5300  loss_centerness: 0.5630  loss_velo: 0.1661  loss_dir: 0.6830  loss_attr: 1.6030
+2023/06/24 20:10:02 - mmengine - INFO - Exp name: FCOS3D_20230624_200347
+2023/06/24 20:10:02 - mmengine - INFO - Epoch(train)  [1][1000/1452]  lr: 2.0000e-03  eta: 1:37:43  time: 0.3516  data_time: 0.0058  memory: 4113  grad_norm: 15.1350  loss: 13.3678  loss_cls: 0.8267  loss_offset: 1.4525  loss_depth: 4.1584  loss_size: 3.1384  loss_rotsin: 0.5605  loss_centerness: 0.5942  loss_velo: 0.2012  loss_dir: 0.7104  loss_attr: 1.7254
+2023/06/24 20:10:20 - mmengine - INFO - Epoch(train)  [1][1050/1452]  lr: 2.0000e-03  eta: 1:37:21  time: 0.3506  data_time: 0.0059  memory: 4081  grad_norm: 11.9308  loss: 13.8466  loss_cls: 0.8817  loss_offset: 1.3565  loss_depth: 4.7706  loss_size: 3.3011  loss_rotsin: 0.5770  loss_centerness: 0.5771  loss_velo: 0.1888  loss_dir: 0.6721  loss_attr: 1.5217
+2023/06/24 20:10:37 - mmengine - INFO - Epoch(train)  [1][1100/1452]  lr: 2.0000e-03  eta: 1:36:57  time: 0.3494  data_time: 0.0058  memory: 4113  grad_norm: 21.5917  loss: 12.1513  loss_cls: 0.8549  loss_offset: 1.3984  loss_depth: 3.3412  loss_size: 3.0561  loss_rotsin: 0.5648  loss_centerness: 0.6022  loss_velo: 0.1180  loss_dir: 0.7192  loss_attr: 1.4966
+2023/06/24 20:10:54 - mmengine - INFO - Epoch(train)  [1][1150/1452]  lr: 2.0000e-03  eta: 1:36:35  time: 0.3502  data_time: 0.0058  memory: 4096  grad_norm: 23.6917  loss: 12.0770  loss_cls: 0.8020  loss_offset: 1.3967  loss_depth: 2.9611  loss_size: 3.2272  loss_rotsin: 0.5875  loss_centerness: 0.5999  loss_velo: 0.2220  loss_dir: 0.7452  loss_attr: 1.5353
+2023/06/24 20:11:12 - mmengine - INFO - Epoch(train)  [1][1200/1452]  lr: 2.0000e-03  eta: 1:36:14  time: 0.3509  data_time: 0.0059  memory: 4073  grad_norm: 18.9924  loss: 11.9496  loss_cls: 0.7633  loss_offset: 1.4103  loss_depth: 2.6904  loss_size: 3.4559  loss_rotsin: 0.5737  loss_centerness: 0.6025  loss_velo: 0.1109  loss_dir: 0.7181  loss_attr: 1.6245
+2023/06/24 20:11:30 - mmengine - INFO - Epoch(train)  [1][1250/1452]  lr: 2.0000e-03  eta: 1:35:55  time: 0.3549  data_time: 0.0060  memory: 4139  grad_norm: 2304.9308  loss: 12.3278  loss_cls: 0.7778  loss_offset: 1.4036  loss_depth: 3.0156  loss_size: 3.5363  loss_rotsin: 0.6307  loss_centerness: 0.5987  loss_velo: 0.1822  loss_dir: 0.6863  loss_attr: 1.4966
+2023/06/24 20:11:47 - mmengine - INFO - Epoch(train)  [1][1300/1452]  lr: 2.0000e-03  eta: 1:35:35  time: 0.3520  data_time: 0.0058  memory: 4192  grad_norm: 13.3437  loss: 11.4934  loss_cls: 0.9923  loss_offset: 1.3335  loss_depth: 3.1547  loss_size: 2.5479  loss_rotsin: 0.5487  loss_centerness: 0.5637  loss_velo: 0.1041  loss_dir: 0.6571  loss_attr: 1.5914
+2023/06/24 20:12:05 - mmengine - INFO - Epoch(train)  [1][1350/1452]  lr: 2.0000e-03  eta: 1:35:15  time: 0.3511  data_time: 0.0058  memory: 4143  grad_norm: 31.6671  loss: 13.0118  loss_cls: 0.7813  loss_offset: 1.3673  loss_depth: 3.5669  loss_size: 3.8570  loss_rotsin: 0.5126  loss_centerness: 0.6033  loss_velo: 0.1658  loss_dir: 0.7251  loss_attr: 1.4324
+2023/06/24 20:12:23 - mmengine - INFO - Epoch(train)  [1][1400/1452]  lr: 2.0000e-03  eta: 1:34:55  time: 0.3529  data_time: 0.0057  memory: 4187  grad_norm: 27.2565  loss: 12.5174  loss_cls: 0.9300  loss_offset: 1.4141  loss_depth: 3.3451  loss_size: 3.3024  loss_rotsin: 0.5741  loss_centerness: 0.5849  loss_velo: 0.1476  loss_dir: 0.7173  loss_attr: 1.5019
+2023/06/24 20:12:40 - mmengine - INFO - Epoch(train)  [1][1450/1452]  lr: 2.0000e-03  eta: 1:34:38  time: 0.3559  data_time: 0.0060  memory: 4170  grad_norm: 17.2541  loss: 10.6403  loss_cls: 0.8198  loss_offset: 1.3075  loss_depth: 2.2364  loss_size: 3.0135  loss_rotsin: 0.5317  loss_centerness: 0.5652  loss_velo: 0.1657  loss_dir: 0.5797  loss_attr: 1.4208
+2023/06/24 20:12:41 - mmengine - INFO - Exp name: FCOS3D_20230624_200347
+2023/06/24 20:12:47 - mmengine - INFO - Epoch(val)  [1][ 50/972]    eta: 0:01:44  time: 0.1133  data_time: 0.0046  memory: 3915  
+2023/06/24 20:12:52 - mmengine - INFO - Epoch(val)  [1][100/972]    eta: 0:01:35  time: 0.1065  data_time: 0.0022  memory: 789  
+2023/06/24 20:12:57 - mmengine - INFO - Epoch(val)  [1][150/972]    eta: 0:01:29  time: 0.1063  data_time: 0.0022  memory: 789  
+2023/06/24 20:13:03 - mmengine - INFO - Epoch(val)  [1][200/972]    eta: 0:01:23  time: 0.1066  data_time: 0.0023  memory: 789  
+2023/06/24 20:13:08 - mmengine - INFO - Epoch(val)  [1][250/972]    eta: 0:01:17  time: 0.1069  data_time: 0.0023  memory: 789  
+2023/06/24 20:13:13 - mmengine - INFO - Epoch(val)  [1][300/972]    eta: 0:01:12  time: 0.1064  data_time: 0.0022  memory: 789  
+2023/06/24 20:13:19 - mmengine - INFO - Epoch(val)  [1][350/972]    eta: 0:01:06  time: 0.1065  data_time: 0.0023  memory: 789  
+2023/06/24 20:13:24 - mmengine - INFO - Epoch(val)  [1][400/972]    eta: 0:01:01  time: 0.1067  data_time: 0.0023  memory: 789  
+2023/06/24 20:13:29 - mmengine - INFO - Epoch(val)  [1][450/972]    eta: 0:00:56  time: 0.1066  data_time: 0.0023  memory: 789  
+2023/06/24 20:13:35 - mmengine - INFO - Epoch(val)  [1][500/972]    eta: 0:00:50  time: 0.1064  data_time: 0.0022  memory: 789  
+2023/06/24 20:13:40 - mmengine - INFO - Epoch(val)  [1][550/972]    eta: 0:00:45  time: 0.1061  data_time: 0.0021  memory: 789  
+2023/06/24 20:13:45 - mmengine - INFO - Epoch(val)  [1][600/972]    eta: 0:00:39  time: 0.1063  data_time: 0.0022  memory: 789  
+2023/06/24 20:13:51 - mmengine - INFO - Epoch(val)  [1][650/972]    eta: 0:00:34  time: 0.1063  data_time: 0.0021  memory: 789  
+2023/06/24 20:13:56 - mmengine - INFO - Epoch(val)  [1][700/972]    eta: 0:00:29  time: 0.1063  data_time: 0.0021  memory: 789  
+2023/06/24 20:14:01 - mmengine - INFO - Epoch(val)  [1][750/972]    eta: 0:00:23  time: 0.1063  data_time: 0.0022  memory: 789  
+2023/06/24 20:14:07 - mmengine - INFO - Epoch(val)  [1][800/972]    eta: 0:00:18  time: 0.1066  data_time: 0.0023  memory: 789  
+2023/06/24 20:14:12 - mmengine - INFO - Epoch(val)  [1][850/972]    eta: 0:00:13  time: 0.1067  data_time: 0.0024  memory: 789  
+2023/06/24 20:14:17 - mmengine - INFO - Epoch(val)  [1][900/972]    eta: 0:00:07  time: 0.1068  data_time: 0.0023  memory: 789  
+2023/06/24 20:14:23 - mmengine - INFO - Epoch(val)  [1][950/972]    eta: 0:00:02  time: 0.1067  data_time: 0.0022  memory: 789  
+2023/06/24 20:15:43 - mmengine - INFO - Epoch(val) [1][972/972]    NuScenes metric/pred_instances_3d_NuScenes/car_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/car_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/car_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/car_AP_dist_4.0: 0.0198  NuScenes metric/pred_instances_3d_NuScenes/car_trans_err: 1.3129  NuScenes metric/pred_instances_3d_NuScenes/car_scale_err: 0.5756  NuScenes metric/pred_instances_3d_NuScenes/car_orient_err: 1.6326  NuScenes metric/pred_instances_3d_NuScenes/car_vel_err: 1.1713  NuScenes metric/pred_instances_3d_NuScenes/car_attr_err: 0.1865  NuScenes metric/pred_instances_3d_NuScenes/mATE: 1.0313  NuScenes metric/pred_instances_3d_NuScenes/mASE: 0.9576  NuScenes metric/pred_instances_3d_NuScenes/mAOE: 1.0703  NuScenes metric/pred_instances_3d_NuScenes/mAVE: 1.0214  NuScenes metric/pred_instances_3d_NuScenes/mAAE: 0.8983  NuScenes metric/pred_instances_3d_NuScenes/truck_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_vel_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/truck_attr_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_vel_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/trailer_attr_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_vel_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bus_attr_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_vel_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/construction_vehicle_attr_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_vel_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/bicycle_attr_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_vel_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/motorcycle_attr_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_vel_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/pedestrian_attr_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_orient_err: nan  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_vel_err: nan  NuScenes metric/pred_instances_3d_NuScenes/traffic_cone_attr_err: nan  NuScenes metric/pred_instances_3d_NuScenes/barrier_AP_dist_0.5: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/barrier_AP_dist_1.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/barrier_AP_dist_2.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/barrier_AP_dist_4.0: 0.0000  NuScenes metric/pred_instances_3d_NuScenes/barrier_trans_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/barrier_scale_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/barrier_orient_err: 1.0000  NuScenes metric/pred_instances_3d_NuScenes/barrier_vel_err: nan  NuScenes metric/pred_instances_3d_NuScenes/barrier_attr_err: nan  NuScenes metric/pred_instances_3d_NuScenes/NDS: 0.0147  NuScenes metric/pred_instances_3d_NuScenes/mAP: 0.0005  data_time: 0.0024  time: 0.1068
+2023/06/24 20:16:01 - mmengine - INFO - Epoch(train)  [2][  50/1452]  lr: 2.0000e-03  eta: 1:34:19  time: 0.3552  data_time: 0.0061  memory: 4108  grad_norm: 20.3071  loss: 11.9705  loss_cls: 0.7850  loss_offset: 1.4167  loss_depth: 3.1888  loss_size: 2.9851  loss_rotsin: 0.5626  loss_centerness: 0.6010  loss_velo: 0.1692  loss_dir: 0.7278  loss_attr: 1.5341

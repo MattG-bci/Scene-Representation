@@ -1,5 +1,5 @@
 dataset_type = 'NuScenesDataset'
-data_root = '/home/efs/users/mateusz/data/nuscenes/'
+data_root = '/home/efs/datasets/nuscenes_tiny'
 class_names = [
     'car', 'truck', 'trailer', 'bus', 'construction_vehicle', 'bicycle',
     'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
@@ -41,7 +41,7 @@ train_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=True),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_root='/home/efs/datasets/nuscenes_tiny',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -88,7 +88,7 @@ val_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_root='/home/efs/datasets/nuscenes_tiny',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -121,7 +121,7 @@ test_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_root='/home/efs/datasets/nuscenes_tiny',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -148,14 +148,14 @@ test_dataloader = dict(
         backend_args=None))
 val_evaluator = dict(
     type='NuScenesMetric',
-    data_root='/home/efs/users/mateusz/data/nuscenes/',
-    ann_file='/home/efs/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    data_root='/home/efs/datasets/nuscenes_tiny',
+    ann_file='/home/efs/datasets/nuscenes_tinynuscenes_infos_val.pkl',
     metric='bbox',
     backend_args=None)
 test_evaluator = dict(
     type='NuScenesMetric',
-    data_root='/home/efs/users/mateusz/data/nuscenes/',
-    ann_file='/home/efs/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    data_root='/home/efs/datasets/nuscenes_tiny',
+    ann_file='/home/efs/datasets/nuscenes_tinynuscenes_infos_val.pkl',
     metric='bbox',
     backend_args=None)
 vis_backends = [dict(type='LocalVisBackend')]
@@ -284,7 +284,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'))
 log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
 log_level = 'INFO'
-load_from = None
+load_from = '/home/efs/users/mateusz/Scene-Representation/project/utils/models/3D_detectors/models/fcos3d_r101_caffe_fpn_gn-head_dcn_2x8_1x_nus-mono3d_20210715_235813-4bed5239.pth'
 resume = False
 launcher = 'none'
 work_dir = './work_dirs/FCOS3D'

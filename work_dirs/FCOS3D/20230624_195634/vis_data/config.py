@@ -284,7 +284,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'))
 log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
 log_level = 'INFO'
-load_from = None
+load_from = '/home/efs/users/mateusz/Scene-Representation/project/utils/models/3D_detectors/models/fcos3d_r101_caffe_fpn_gn-head_dcn_2x8_1x_nus-mono3d_20210715_235813-4bed5239.pth'
 resume = False
 launcher = 'none'
 work_dir = './work_dirs/FCOS3D'

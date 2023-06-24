@@ -1,5 +1,5 @@
 dataset_type = 'NuScenesDataset'
-data_root = '/home/efs/datasets/nuscenes_tiny'
+data_root = '/home/efs/users/mateusz/data/nuscenes/'
 class_names = [
     'car', 'truck', 'trailer', 'bus', 'construction_vehicle', 'bicycle',
     'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
