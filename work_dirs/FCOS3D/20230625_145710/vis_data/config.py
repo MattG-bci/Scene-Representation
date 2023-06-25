@@ -50,7 +50,7 @@ train_dataloader = dict(
             CAM_BACK='samples/CAM_BACK',
             CAM_BACK_RIGHT='samples/CAM_BACK_RIGHT',
             CAM_BACK_LEFT='samples/CAM_BACK_LEFT'),
-        ann_file='small_nuscenes_infos_train_0.3_finetune.pkl',
+        ann_file='small_nuscenes_infos_train.pkl',
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
