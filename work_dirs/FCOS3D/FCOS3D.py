@@ -50,7 +50,7 @@ train_dataloader = dict(
             CAM_BACK='samples/CAM_BACK',
             CAM_BACK_RIGHT='samples/CAM_BACK_RIGHT',
             CAM_BACK_LEFT='samples/CAM_BACK_LEFT'),
-        ann_file='small_nuscenes_infos_train_0.3_finetune.pkl',
+        ann_file='nuscenes_infos_train.pkl',
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
@@ -81,7 +81,7 @@ train_dataloader = dict(
         use_valid_flag=True,
         backend_args=None))
 val_dataloader = dict(
-    batch_size=1,
+    batch_size=2,
     num_workers=2,
     persistent_workers=True,
     drop_last=False,
@@ -114,7 +114,7 @@ val_dataloader = dict(
         use_valid_flag=True,
         backend_args=None))
 test_dataloader = dict(
-    batch_size=1,
+    batch_size=2,
     num_workers=2,
     persistent_workers=True,
     drop_last=False,
@@ -173,7 +173,7 @@ model = dict(
         pad_size_divisor=32),
     backbone=dict(
         type='mmdet.ResNet',
-        depth=101,
+        depth=50,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
@@ -246,7 +246,7 @@ model = dict(
         score_thr=0.05,
         min_bbox_size=0,
         max_per_img=200))
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_interval=1)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=3, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 param_scheduler = [
