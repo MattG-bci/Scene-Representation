@@ -26,7 +26,7 @@ train_pipeline = [
         with_bbox_3d=True,
         with_label_3d=True,
         with_bbox_depth=True),
-    dict(type='mmdet.Resize', scale=(1600, 900), keep_ratio=True),
+    dict(type='mmdet.Resize', scale=(1600, 900), keep_ratio=True), # (640, 360)
     dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
     dict(
         type='Pack3DDetInputs',
@@ -42,7 +42,7 @@ test_pipeline = [
 ]
 
 train_dataloader = dict(
-    batch_size=1, num_workers=2, dataset=dict(pipeline=train_pipeline))
+    batch_size=8, num_workers=4, dataset=dict(pipeline=train_pipeline))
 test_dataloader = dict(dataset=dict(pipeline=test_pipeline))
 val_dataloader = dict(dataset=dict(pipeline=test_pipeline))
 

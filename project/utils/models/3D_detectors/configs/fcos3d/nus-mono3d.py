@@ -51,8 +51,8 @@ test_pipeline = [
 ]
 
 train_dataloader = dict(
-    batch_size=2,
-    num_workers=2,
+    batch_size=8,
+    num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
     dataset=dict(
@@ -66,7 +66,7 @@ train_dataloader = dict(
             CAM_BACK='samples/CAM_BACK',
             CAM_BACK_RIGHT='samples/CAM_BACK_RIGHT',
             CAM_BACK_LEFT='samples/CAM_BACK_LEFT'),
-        ann_file='nuscenes_infos_train.pkl',
+        ann_file='nuscenes_infos_train_0.25_finetune.pkl',
         load_type='mv_image_based',
         pipeline=train_pipeline,
         metainfo=metainfo,
@@ -78,8 +78,8 @@ train_dataloader = dict(
         use_valid_flag=True,
         backend_args=backend_args))
 val_dataloader = dict(
-    batch_size=2,
-    num_workers=2,
+    batch_size=8,
+    num_workers=4,
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),

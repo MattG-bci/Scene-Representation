@@ -16,9 +16,10 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
         style='caffe',
-        init_cfg=dict(
-            type='Pretrained',
-            checkpoint='open-mmlab://detectron2/resnet101_caffe')),
+        init_cfg=None#dict(
+            #type="Pretrained",
+            #checkpoint='open-mmlab://detectron2/resnet101_caffe')
+            ),
     neck=dict(
         type='mmdet.FPN',
         in_channels=[256, 512, 1024, 2048],
