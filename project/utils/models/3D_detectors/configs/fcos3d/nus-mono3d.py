@@ -34,7 +34,7 @@ train_pipeline = [
         with_bbox_3d=True,
         with_label_3d=True,
         with_bbox_depth=True),
-    dict(type='Resize', scale=(1600, 900), keep_ratio=True),
+    dict(type='mmdet.Resize', scale=(780,), keep_ratio=True),
     dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
     dict(
         type='Pack3DDetInputs',
@@ -46,12 +46,12 @@ train_pipeline = [
 
 test_pipeline = [
     dict(type='LoadImageFromFileMono3D', backend_args=backend_args),
-    dict(type='mmdet.Resize', scale=(1600, 900), keep_ratio=True),
+    dict(type='mmdet.Resize', scale=(780,), keep_ratio=True),
     dict(type='Pack3DDetInputs', keys=['img'])
 ]
 
 train_dataloader = dict(
-    batch_size=8,
+    batch_size=32,
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -66,7 +66,7 @@ train_dataloader = dict(
             CAM_BACK='samples/CAM_BACK',
             CAM_BACK_RIGHT='samples/CAM_BACK_RIGHT',
             CAM_BACK_LEFT='samples/CAM_BACK_LEFT'),
-        ann_file='nuscenes_infos_train_0.25_finetune.pkl',
+        ann_file='nuscenes_infos_train.pkl',
         load_type='mv_image_based',
         pipeline=train_pipeline,
         metainfo=metainfo,
@@ -77,8 +77,9 @@ train_dataloader = dict(
         box_type_3d='Camera',
         use_valid_flag=True,
         backend_args=backend_args))
+
 val_dataloader = dict(
-    batch_size=8,
+    batch_size=32,
     num_workers=4,
     persistent_workers=True,
     drop_last=False,
@@ -99,7 +100,7 @@ val_dataloader = dict(
         pipeline=test_pipeline,
         modality=input_modality,
         metainfo=metainfo,
-        test_mode=True,
+        test_mode=False,
         box_type_3d='Camera',
         use_valid_flag=True,
         backend_args=backend_args))
@@ -109,7 +110,7 @@ val_evaluator = dict(
     type='NuScenesMetric',
     data_root=data_root,
     ann_file=data_root + 'nuscenes_infos_val.pkl',
-    metric='bbox',
+    metric='bbox', #maybe bbox_3d instead?
     backend_args=backend_args)
 
 test_evaluator = val_evaluator

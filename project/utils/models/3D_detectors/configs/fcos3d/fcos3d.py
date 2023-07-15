@@ -9,16 +9,16 @@ model = dict(
         pad_size_divisor=32),
     backbone=dict(
         type='mmdet.ResNet',
-        depth=50,
+        depth=101,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
         style='caffe',
-        init_cfg=None#dict(
-            #type="Pretrained",
-            #checkpoint='open-mmlab://detectron2/resnet101_caffe')
+        init_cfg=dict(
+            type="Pretrained",
+            checkpoint='open-mmlab://detectron2/resnet101_caffe')
             ),
     neck=dict(
         type='mmdet.FPN',

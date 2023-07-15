@@ -20,8 +20,7 @@ train_pipeline = [
         with_bbox_3d=True,
         with_label_3d=True,
         with_bbox_depth=True),
-    dict(type='mmdet.Resize', scale=(1600, 900), keep_ratio=True),
-    dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
+    dict(type='Resize3D', scale=(1600, 900), keep_ratio=True),
     dict(
         type='Pack3DDetInputs',
         keys=[
@@ -31,12 +30,25 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFileMono3D', backend_args=None),
-    dict(type='mmdet.Resize', scale_factor=1.0),
-    dict(type='Pack3DDetInputs', keys=['img'])
+    dict(
+        type='LoadAnnotations3D',
+        with_bbox=True,
+        with_label=True,
+        with_attr_label=True,
+        with_bbox_3d=True,
+        with_label_3d=True,
+        with_bbox_depth=True),
+    dict(type='Resize3D', scale_factor=1.0),
+    dict(
+        type='Pack3DDetInputs',
+        keys=[
+            'img', 'gt_bboxes', 'gt_bboxes_labels', 'attr_labels',
+            'gt_bboxes_3d', 'gt_labels_3d', 'centers_2d', 'depths'
+        ])
 ]
 train_dataloader = dict(
-    batch_size=1,
-    num_workers=2,
+    batch_size=32,
+    num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
     dataset=dict(
@@ -62,8 +74,7 @@ train_dataloader = dict(
                 with_bbox_3d=True,
                 with_label_3d=True,
                 with_bbox_depth=True),
-            dict(type='mmdet.Resize', scale=(1600, 900), keep_ratio=True),
-            dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
+            dict(type='Resize3D', scale=(1600, 900), keep_ratio=True),
             dict(
                 type='Pack3DDetInputs',
                 keys=[
@@ -81,8 +92,8 @@ train_dataloader = dict(
         use_valid_flag=True,
         backend_args=None))
 val_dataloader = dict(
-    batch_size=2,
-    num_workers=2,
+    batch_size=32,
+    num_workers=4,
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),
@@ -101,21 +112,34 @@ val_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='mmdet.Resize', scale_factor=1.0),
-            dict(type='Pack3DDetInputs', keys=['img'])
+            dict(
+                type='LoadAnnotations3D',
+                with_bbox=True,
+                with_label=True,
+                with_attr_label=True,
+                with_bbox_3d=True,
+                with_label_3d=True,
+                with_bbox_depth=True),
+            dict(type='Resize3D', scale_factor=1.0),
+            dict(
+                type='Pack3DDetInputs',
+                keys=[
+                    'img', 'gt_bboxes', 'gt_bboxes_labels', 'attr_labels',
+                    'gt_bboxes_3d', 'gt_labels_3d', 'centers_2d', 'depths'
+                ])
         ],
         modality=dict(use_lidar=False, use_camera=True),
         metainfo=dict(classes=[
             'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
             'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
         ]),
-        test_mode=True,
+        test_mode=False,
         box_type_3d='Camera',
         use_valid_flag=True,
         backend_args=None))
 test_dataloader = dict(
-    batch_size=2,
-    num_workers=2,
+    batch_size=32,
+    num_workers=4,
     persistent_workers=True,
     drop_last=False,
     sampler=dict(type='DefaultSampler', shuffle=False),
@@ -134,15 +158,28 @@ test_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='mmdet.Resize', scale_factor=1.0),
-            dict(type='Pack3DDetInputs', keys=['img'])
+            dict(
+                type='LoadAnnotations3D',
+                with_bbox=True,
+                with_label=True,
+                with_attr_label=True,
+                with_bbox_3d=True,
+                with_label_3d=True,
+                with_bbox_depth=True),
+            dict(type='Resize3D', scale_factor=1.0),
+            dict(
+                type='Pack3DDetInputs',
+                keys=[
+                    'img', 'gt_bboxes', 'gt_bboxes_labels', 'attr_labels',
+                    'gt_bboxes_3d', 'gt_labels_3d', 'centers_2d', 'depths'
+                ])
         ],
         modality=dict(use_lidar=False, use_camera=True),
         metainfo=dict(classes=[
             'car', 'truck', 'trailer', 'bus', 'construction_vehicle',
             'bicycle', 'motorcycle', 'pedestrian', 'traffic_cone', 'barrier'
         ]),
-        test_mode=True,
+        test_mode=False,
         box_type_3d='Camera',
         use_valid_flag=True,
         backend_args=None))
@@ -173,7 +210,7 @@ model = dict(
         pad_size_divisor=32),
     backbone=dict(
         type='mmdet.ResNet',
-        depth=50,
+        depth=101,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
@@ -246,7 +283,8 @@ model = dict(
         score_thr=0.05,
         min_bbox_size=0,
         max_per_img=200))
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=3, val_interval=1)
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=7, val_begin=1, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 param_scheduler = [
@@ -266,16 +304,16 @@ param_scheduler = [
 ]
 optim_wrapper = dict(
     type='OptimWrapper',
-    optimizer=dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001),
+    optimizer=dict(type='SGD', lr=0.000125, momentum=0.9, weight_decay=0.0001),
     paramwise_cfg=dict(bias_lr_mult=2.0, bias_decay_mult=0.0),
     clip_grad=dict(max_norm=35, norm_type=2))
-auto_scale_lr = dict(enable=False, base_batch_size=16)
+auto_scale_lr = dict(enable=False, base_batch_size=32)
 default_scope = 'mmdet3d'
 default_hooks = dict(
     timer=dict(type='IterTimerHook'),
     logger=dict(type='LoggerHook', interval=50),
     param_scheduler=dict(type='ParamSchedulerHook'),
-    checkpoint=dict(type='CheckpointHook', interval=-1),
+    checkpoint=dict(type='CheckpointHook', interval=1),
     sampler_seed=dict(type='DistSamplerSeedHook'),
     visualization=dict(type='Det3DVisualizationHook'))
 env_cfg = dict(
@@ -284,7 +322,7 @@ env_cfg = dict(
     dist_cfg=dict(backend='nccl'))
 log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
 log_level = 'INFO'
-load_from = None
+load_from = '/home/efs/users/mateusz/Scene-Representation/project/utils/models/3D_detectors/models/fcos3d_r101_caffe_fpn_gn-head_dcn_2x8_1x_nus-mono3d_20210715_235813-4bed5239.pth'
 resume = False
 launcher = 'none'
 work_dir = './work_dirs/FCOS3D'

@@ -90,7 +90,7 @@ img_transforms = transforms.Compose([
 ])
 
 data_root = "/home/efs/users/mateusz/data/nuscenes"
-ann_file = "nuscenes_infos_train.pkl"
+ann_file = "nuscenes_infos_train_debugg.pkl"
 
 
 custom_dataset = CustomNuScenesDataset(data_root, ann_file, transform=img_transforms)
