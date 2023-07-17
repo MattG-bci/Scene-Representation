@@ -22,6 +22,7 @@ class DINO(pl.LightningModule):
         self._deactivate_requires_grad(self.teacher_backbone)
         self._deactivate_requires_grad(self.teacher_head)
         self.criterion = DINOLoss(output_dim=2048, warmup_teacher_temp_epochs=5)
+        self.save_hyperparameters()
 
     def _deactivate_requires_grad(self, module):
         for param in module.parameters():
