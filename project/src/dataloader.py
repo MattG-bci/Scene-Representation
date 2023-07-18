@@ -31,37 +31,33 @@ class NuScenesDataset(Dataset):
     def _initialise_database(self):
         scene_name_to_token = {}
         scene_token_to_samples = {}
-
+        total_samples = 0
         for scene in self.nusc.scene:
             scene_name = scene["name"]
+            total_samples += scene["nbr_samples"]
             if scene_name in self.scene_names:
                 scene_token = scene["token"]
                 scene_name_to_token[scene_name] = scene_token
                 scene_token_to_samples[scene_token] = []
 
-        data = []
-        
-        for sample in self.nusc.sample:
+        data = np.empty(shape=(total_samples * len(self.sensors) + 1, 2), dtype=object)
+        samples = np.empty(shape=(total_samples), dtype=object)
+        for idx, sample in enumerate(self.nusc.sample):
             scene_token = sample["scene_token"]
             if scene_token in scene_token_to_samples.keys():
+                samples[idx] = sample["token"]
 
-            #n_samples = scene["nbr_samples"]
-            #sample = None
-            #for _ in range(n_samples):
-            #    if sample is None:
-            #        sample_token = scene["first_sample_token"]
-            #        sample = self.nusc.get("sample", sample_token)
-            
-            #    else:
-            #        sample_token = sample["next"]
-            #        sample = self.nusc.get("sample", sample_token)
-                
-                data_point = []
-                for sensor in self.sensors:
-                    sensor_data = self.nusc.get("sample_data", sample["data"][sensor])
-                    file_name = sensor_data["filename"]
-                    data_point.append(os.path.join(self.data_path, file_name))
-                data.append(data_point)
+        samples = samples[samples != np.array(None)]
+        for idx, sample_token in enumerate(samples):
+            sample = self.nusc.get("sample", sample_token)
+            for sensor in self.sensors:
+                sensor_data = self.nusc.get("sample_data", sample["data"][sensor])
+                camera_file_name = sensor_data["filename"]
+                corresponding_lidar_data = self.nusc.get("sample_data", sample["data"]["LIDAR_TOP"])
+                lidar_file_name = corresponding_lidar_data["filename"]
+                data[idx] = [os.path.join(self.data_path, camera_file_name), os.path.join(self.data_path, lidar_file_name)]
+        data = data[data != np.array([None] * 2)]
+        data = data.reshape(-1, 2)
         return data
     
     def _get_scenes(self):
@@ -93,9 +89,12 @@ class NuScenesDataset(Dataset):
 
 
 if __name__ == "__main__":
-    SENSORS = ["CAM_FRONT", "LIDAR_TOP"]
+    SENSORS = ["CAM_FRONT"]
 
-    data_root = "/home/efs/users/mateusz/data/nuscenes/"
-    dataset = NuScenesDataset(data_root, sensors=SENSORS, split="train")
+    data_root = "/home/efs/users/mateusz/data/nuscenes_tiny/v1.0-trainval"
+    transform = transforms.Compose([transforms.PILToTensor(),
+                                    transforms.Resize(size=200), 
+                                    transforms.ConvertImageDtype(torch.float32)])
+    dataset = NuScenesDataset(data_root, transform=transform, sensors=SENSORS, split="mini_train")
     print(len(dataset))
-    print(dataset[0])
+    print(dataset[0].size())
