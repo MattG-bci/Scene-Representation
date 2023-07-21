@@ -1,18 +1,15 @@
+import os
+
 import torch
-from torch.utils.data import Dataset, DataLoader
-from torchvision.transforms import ToTensor
-from torchvision import transforms
 from nuscenes import NuScenes
 from nuscenes.utils.data_classes import LidarPointCloud
-import os
 from nuscenes.utils.splits import create_splits_scenes
 from PIL import Image
-import numpy as np
-
+from torch.utils.data import Dataset
+from torchvision import transforms
 
 
 NUSC = None
-
 class NuScenesDataset(Dataset):
     def __init__(self, data_path, sensors, split="train", transform=None):
         self.nusc = self._get_nuscenes_db(data_path, "v1.0-trainval") #NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=False)
@@ -31,33 +28,24 @@ class NuScenesDataset(Dataset):
     def _initialise_database(self):
         scene_name_to_token = {}
         scene_token_to_samples = {}
-        total_samples = 0
+
         for scene in self.nusc.scene:
             scene_name = scene["name"]
-            total_samples += scene["nbr_samples"]
             if scene_name in self.scene_names:
                 scene_token = scene["token"]
                 scene_name_to_token[scene_name] = scene_token
                 scene_token_to_samples[scene_token] = []
 
-        data = np.empty(shape=(total_samples * len(self.sensors) + 1, 2), dtype=object)
-        samples = np.empty(shape=(total_samples), dtype=object)
-        for idx, sample in enumerate(self.nusc.sample):
+        data = []
+        for sample in self.nusc.sample:
             scene_token = sample["scene_token"]
             if scene_token in scene_token_to_samples.keys():
-                samples[idx] = sample["token"]
-
-        samples = samples[samples != np.array(None)]
-        for idx, sample_token in enumerate(samples):
-            sample = self.nusc.get("sample", sample_token)
-            for sensor in self.sensors:
-                sensor_data = self.nusc.get("sample_data", sample["data"][sensor])
-                camera_file_name = sensor_data["filename"]
-                corresponding_lidar_data = self.nusc.get("sample_data", sample["data"]["LIDAR_TOP"])
-                lidar_file_name = corresponding_lidar_data["filename"]
-                data[idx] = [os.path.join(self.data_path, camera_file_name), os.path.join(self.data_path, lidar_file_name)]
-        data = data[data != np.array([None] * 2)]
-        data = data.reshape(-1, 2)
+                for sensor in self.sensors:
+                    cam_data = self.nusc.get("sample_data", sample["data"][sensor])
+                    cam_file_name = cam_data["filename"]
+                    lidar_data = self.nusc.get("sample_data", sample["data"]["LIDAR_TOP"])
+                    lidar_file_name = lidar_data["filename"]
+                    data.append([os.path.join(self.data_path, cam_file_name), os.path.join(self.data_path, lidar_file_name)])
         return data
     
     def _get_scenes(self):
@@ -66,6 +54,10 @@ class NuScenesDataset(Dataset):
             f"Wrong split key. Please select one of the following: {scenes.keys()}"
 
         return scenes[self.split]
+    
+    def _open_lidar(self, x):
+        pass
+
     
     @staticmethod
     def _init_nuscenes_db(data_root, version):
@@ -89,7 +81,7 @@ class NuScenesDataset(Dataset):
 
 
 if __name__ == "__main__":
-    SENSORS = ["CAM_FRONT"]
+    SENSORS = ["CAM_FRONT", "CAM_BACK"]
 
     data_root = "/home/efs/users/mateusz/data/nuscenes_tiny/v1.0-trainval"
     transform = transforms.Compose([transforms.PILToTensor(),

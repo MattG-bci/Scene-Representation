@@ -1,11 +1,7 @@
 from multiprocessing.dummy import freeze_support
-from lightly.data.multi_view_collate import MultiViewCollate
-from lightly.transforms.simclr_transform import SimCLRTransform
 from utils.models.SSL.Dino import *
-from lightly.data import LightlyDataset
 from torchvision import transforms
 from src.dataloader import *
-import pandas as pd
 import warnings
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -15,13 +11,13 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 warnings.filterwarnings("ignore")
 SENSORS = ["CAM_FRONT"]
 
-backbone = torchvision.models.resnet50() # for ResNet-50 there was an issue in memory allocation. Probably something to be optimised. 
+backbone = torchvision.models.resnet50() 
 model = DINO(backbone)
 transform = transforms.Compose([
-    transforms.Resize(size=200),
-    DINOTransform(global_crop_size=200, local_crop_size=96, normalize=None) # they use RandomResizeCrop so int => (size, size)
+    transforms.Resize(size=224),
+    DINOTransform(global_crop_size=200, global_crop_ratio=(16/9, 16/9), local_crop_size=96, cj_prob=0.0, hf_prob=0.0, solarization_prob=0.0, random_gray_scale=0.0, gaussian_blur=(0.0, 0.0, 0.0), normalize=None) # they use RandomResizeCrop so int => (size, size)
 ])
-data_root = "/home/efs/users/mateusz/data/nuscenes"#_tiny/v1.0-trainval"
+data_root = "/home/efs/users/mateusz/data/nuscenes"
 train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="train")
 val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="val")
 

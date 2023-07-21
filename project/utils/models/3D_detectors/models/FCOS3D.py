@@ -26,8 +26,8 @@ train_pipeline = [
         with_bbox_3d=True,
         with_label_3d=True,
         with_bbox_depth=True),
-    dict(type='Resize3D', scale=(1600, 900), keep_ratio=True),
-    #dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
+    dict(type='Resize3D', scale_factor=0.45, keep_ratio=True),
+    dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
     dict(
         type='Pack3DDetInputs',
         keys=[
@@ -45,8 +45,7 @@ test_pipeline = [
         with_bbox_3d=True,
         with_label_3d=True,
         with_bbox_depth=True),
-    dict(type='Resize3D', scale_factor=1.0), # change this to scale=(780,)
-    #dict(type='AffineResize', img_scale=(780, 450), down_ratio=1, bbox_clip_border=False),
+    dict(type="Resize3D", scale_factor=0.45, keep_ratio=True),
     dict(type='Pack3DDetInputs', keys=['img', 'gt_bboxes', 'gt_bboxes_labels', 'attr_labels',
             'gt_bboxes_3d', 'gt_labels_3d', 'centers_2d', 'depths'])
 ]

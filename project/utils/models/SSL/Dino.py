@@ -7,6 +7,7 @@ import numpy as np
 from lightly.loss import DINOLoss
 from lightly.models.modules import DINOProjectionHead
 from lightly.transforms.dino_transform import DINOTransform
+from torchsummary import summary
 
 
 class DINO(pl.LightningModule):
@@ -14,6 +15,7 @@ class DINO(pl.LightningModule):
         super().__init__()
         backbone = nn.Sequential(*list(backbone_network.children())[:-1])
         input_dim = 2048
+        backbone.apply(self._init_weights)
         self.student_backbone = backbone
         self.student_head = DINOProjectionHead(input_dim, 512, 64, 2048, freeze_last_layer=1) # no. neurons in the projection head not exactly matching in the original DINO paper
                                                                                                 # which would be (in_dim, 2048, 256, 4096) here.
@@ -51,6 +53,13 @@ class DINO(pl.LightningModule):
         z = self.teacher_head(y)
         return z
     
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            torch.nn.init.xavier_normal_(module.weight)
+            module.bias.data.fill(0.01)
+        elif isinstance(module, nn.Conv2d):
+            torch.nn.init.xavier_normal_(module.weight)
+    
     def _common_step(self, batch, batch_idx):
         views = batch[0]
         views = [view.to(self.device) for view in views]
@@ -84,6 +93,13 @@ class DINO(pl.LightningModule):
         self.student_head.cancel_last_layer_gradients(current_epoch=self.current_epoch)
     
     def configure_optimizers(self):
-        optim = torch.optim.AdamW(self.parameters(), lr=0.0005)
+        optim = torch.optim.AdamW(self.parameters(), lr=0.0005) # 0.0005 according to the original DINO paper
         return optim
 
+if __name__ == "__main__":
+    backbone = torchvision.models.resnet50() 
+    model = DINO(backbone)
+    num_params = sum(p.numel() for p in model.parameters())
+    model_size_mb = num_params * 4 / (1024**2)
+    print(f"The model size is: {model_size_mb:.2f} MB")
+    

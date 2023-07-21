@@ -9,16 +9,16 @@ model = dict(
         pad_size_divisor=32),
     backbone=dict(
         type='mmdet.ResNet',
-        depth=101,
+        depth=50,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
-        style='caffe',
-        init_cfg=dict(
-            type="Pretrained",
-            checkpoint='open-mmlab://detectron2/resnet101_caffe')
+        style='pytorch',
+        init_cfg=None#dict(
+            #type="Pretrained",
+            #checkpoint='open-mmlab://detectron2/resnet101_caffe')
             ),
     neck=dict(
         type='mmdet.FPN',
@@ -52,6 +52,7 @@ model = dict(
         ),
         dir_branch=(256, ),
         attr_branch=(256, ),
+        centerness_alpha=2.5 * 0.45,
         loss_cls=dict(
             type='mmdet.FocalLoss',
             use_sigmoid=True,
