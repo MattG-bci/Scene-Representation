@@ -1,6 +1,7 @@
 import os
 
 import torch
+import matplotlib.pyplot as plt
 from nuscenes import NuScenes
 from nuscenes.utils.data_classes import LidarPointCloud
 from nuscenes.utils.splits import create_splits_scenes
@@ -56,9 +57,29 @@ class NuScenesDataset(Dataset):
         return scenes[self.split]
     
     def _open_lidar(self, x):
-        pass
+        lidar_pointcloud = LidarPointCloud.from_file(x)
+        return lidar_pointcloud.points
 
-    
+    def visualise_point_cloud(self, point_cloud, dim="2d"):
+        assert dim in ["2d", "3d"], \
+            "Dim for the visualidation not valid. Please use either \"2d\" or \"3d\"."
+
+        x = point_cloud[0]
+        y = point_cloud[1]
+        z = point_cloud[2]
+
+        fig = plt.figure()
+        if dim == "2d":
+            ax = fig.add_subplot(111)
+            ax.scatter(x, y, s=0.1)
+        else:
+            ax = fig.add_subplot(projection=dim)
+            ax.scatter(x, y, z, s=0.1)
+            ax.set_zlabel("Z")
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        plt.savefig(f"Lidar plot {dim}.jpg")
+
     @staticmethod
     def _init_nuscenes_db(data_root, version):
         nusc = NuScenes(version=version, dataroot=data_root, verbose=True)
@@ -76,17 +97,18 @@ class NuScenesDataset(Dataset):
     def __getitem__(self, index):
         data_point = self.dataset[index]
         img_path = data_point[0]
+        lidar = self._open_lidar(data_point[1])
+        self.visualise_point_cloud(lidar, dim="3d")
         img = self.transform(Image.open(img_path))
         return img
 
 
 if __name__ == "__main__":
     SENSORS = ["CAM_FRONT", "CAM_BACK"]
-
     data_root = "/home/efs/users/mateusz/data/nuscenes_tiny/v1.0-trainval"
     transform = transforms.Compose([transforms.PILToTensor(),
                                     transforms.Resize(size=200), 
                                     transforms.ConvertImageDtype(torch.float32)])
     dataset = NuScenesDataset(data_root, transform=transform, sensors=SENSORS, split="mini_train")
     print(len(dataset))
-    print(dataset[0].size())
+    print(dataset[0])
