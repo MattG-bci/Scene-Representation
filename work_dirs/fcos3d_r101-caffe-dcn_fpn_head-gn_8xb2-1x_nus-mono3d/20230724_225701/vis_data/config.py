@@ -36,10 +36,7 @@ train_pipeline = [
         with_bbox_3d=True,
         with_label_3d=True,
         with_bbox_depth=True),
-    dict(type='mmdet.Resize', scale=(
-        1600,
-        900,
-    ), keep_ratio=True),
+    dict(type='Resize3D', scale=(480, ), keep_ratio=True),
     dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
     dict(
         type='Pack3DDetInputs',
@@ -56,7 +53,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFileMono3D', backend_args=None),
-    dict(type='mmdet.Resize', scale_factor=1.0),
+    dict(type='Resize3D', scale=(480, )),
     dict(type='Pack3DDetInputs', keys=[
         'img',
     ]),
@@ -89,10 +86,7 @@ train_dataloader = dict(
                 with_bbox_3d=True,
                 with_label_3d=True,
                 with_bbox_depth=True),
-            dict(type='mmdet.Resize', scale=(
-                1600,
-                900,
-            ), keep_ratio=True),
+            dict(type='Resize3D', scale=(480, ), keep_ratio=True),
             dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
             dict(
                 type='Pack3DDetInputs',
@@ -145,7 +139,7 @@ val_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='mmdet.Resize', scale_factor=1.0),
+            dict(type='Resize3D', scale=(480, )),
             dict(type='Pack3DDetInputs', keys=[
                 'img',
             ]),
@@ -188,7 +182,7 @@ test_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='mmdet.Resize', scale_factor=1.0),
+            dict(type='Resize3D', scale=(480, )),
             dict(type='Pack3DDetInputs', keys=[
                 'img',
             ]),
@@ -363,7 +357,8 @@ model = dict(
         score_thr=0.05,
         min_bbox_size=0,
         max_per_img=200))
-train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_interval=1)
+train_cfg = dict(
+    type='EpochBasedTrainLoop', max_epochs=12, val_begin=3, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 param_scheduler = [
@@ -395,7 +390,7 @@ default_hooks = dict(
     timer=dict(type='IterTimerHook'),
     logger=dict(type='LoggerHook', interval=50),
     param_scheduler=dict(type='ParamSchedulerHook'),
-    checkpoint=dict(type='CheckpointHook', interval=-1),
+    checkpoint=dict(type='CheckpointHook', interval=1),
     sampler_seed=dict(type='DistSamplerSeedHook'),
     visualization=dict(type='Det3DVisualizationHook'))
 env_cfg = dict(
