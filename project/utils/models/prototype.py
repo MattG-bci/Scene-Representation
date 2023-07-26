@@ -22,7 +22,7 @@ from feature_extractors.PointNet import PointNet
 
 
 class CrossAttentionModule(nn.Module):
-    def __init__(self, in_channels_query, in_channels_kv, out_channels, num_heads=8):
+    def __init__(self, in_channels_query, in_channels_kv, out_channels, num_heads=1):
         super(CrossAttentionModule, self).__init__()
         # Define the dimension of the queries, keys, and values for both modalities
         self.in_channels_query = in_channels_query
@@ -66,7 +66,7 @@ class ProtoNet(pl.LightningModule):
         super().__init__()
         self.img_backbone = nn.Sequential(*list(img_backbone.children())[:-1])
         self.point_backbone = point_backbone
-        self.cross_attention_module = CrossAttentionModule(in_channels_query=1, in_channels_kv=1, out_channels=8)
+        self.cross_attention_module = CrossAttentionModule(in_channels_query=1, in_channels_kv=1, out_channels=1, num_heads=1) # probably not very useful
 
     def forward(self, x):
         imgs = x[0]
@@ -75,7 +75,8 @@ class ProtoNet(pl.LightningModule):
         vision_features = vision_features.squeeze(-2)
         point_cloud_features, _ = self.point_backbone(point_cloud)
         point_cloud_features = point_cloud_features.unsqueeze(-1)
-        out = self.cross_attention_module(vision_features, point_cloud_features, point_cloud_features)
+        attention_out = self.cross_attention_module(vision_features, point_cloud_features, point_cloud_features)
+        fused_features = torch.cat([vision_features, attention_out], 1)
         return vision_features, point_cloud_features
     
     def training_step(self, batch, batch_idx):

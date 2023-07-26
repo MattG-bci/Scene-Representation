@@ -17,9 +17,9 @@ transform = transforms.Compose([
     transforms.Resize(size=224),
     DINOTransform(global_crop_size=200, local_crop_size=96, cj_prob=0.0, hf_prob=0.0, solarization_prob=0.0, random_gray_scale=0.0, gaussian_blur=(0.0, 0.0, 0.0), normalize=None) # they use RandomResizeCrop so int => (size, size)
 ])
-data_root = "/home/ubuntu/users/mateusz/data/nuscenes_tiny"
-train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="mini_train")
-val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="mini_val")
+data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
+train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="train")
+val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="val")
 
 train_dataloader = torch.utils.data.DataLoader(
     train_dataset,

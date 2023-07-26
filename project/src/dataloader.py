@@ -13,7 +13,7 @@ from torchvision import transforms
 NUSC = None
 class NuScenesDataset(Dataset):
     def __init__(self, data_path, sensors, split="train", transform=None):
-        self.nusc = self._get_nuscenes_db(data_path, "v1.0-mini") #NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=False)
+        self.nusc = self._get_nuscenes_db(data_path, "v1.0-trainval") #NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=False)
         self.data_path = data_path
         self.sensors = sensors 
         self.split = split
