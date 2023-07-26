@@ -28,7 +28,6 @@ dependencies:
     - appdirs==1.4.4
     - certifi==2023.5.7
     - charset-normalizer==3.1.0
-    - clip==1.0
     - contourpy==1.1.0
     - cramjam==2.6.2
     - cycler==0.11.0

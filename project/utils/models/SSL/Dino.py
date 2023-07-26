@@ -42,8 +42,8 @@ class DINO(pl.LightningModule):
         views = batch[0]
         views = [view.to(self.device) for view in views]
         global_views = views[:2]
-        teacher_out = [self.forward_teacher(view) for view in global_views]
-        student_out = [self.forward(view) for view in views]
+        teacher_out = [self.forward_teacher(view.unsqueeze(0)) for view in global_views]
+        student_out = [self.forward(view.unsqueeze(0)) for view in views]
         loss = self.criterion(teacher_out, student_out, epoch=self.current_epoch)
         return loss
 

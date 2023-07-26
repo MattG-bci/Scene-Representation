@@ -1,5 +1,5 @@
 dataset_type = 'NuScenesDataset'
-data_root = '/home/efs/users/mateusz/data/nuscenes/'
+data_root = '/home/ubuntu/users/mateusz/data/nuscenes/'
 class_names = [
     'car',
     'truck',
@@ -53,7 +53,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFileMono3D', backend_args=None),
-    dict(type='Resize3D', scale=(480, )),
+    dict(type='Resize3D', scale=(480, ), keep_ratio=True),
     dict(type='Pack3DDetInputs', keys=[
         'img',
     ]),
@@ -65,7 +65,7 @@ train_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=True),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -126,7 +126,7 @@ val_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -139,7 +139,7 @@ val_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='Resize3D', scale=(480, )),
+            dict(type='Resize3D', scale=(480, ), keep_ratio=True),
             dict(type='Pack3DDetInputs', keys=[
                 'img',
             ]),
@@ -169,7 +169,7 @@ test_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/efs/users/mateusz/data/nuscenes/',
+        data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -182,7 +182,7 @@ test_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='Resize3D', scale=(480, )),
+            dict(type='Resize3D', scale=(480, ), keep_ratio=True),
             dict(type='Pack3DDetInputs', keys=[
                 'img',
             ]),
@@ -206,14 +206,14 @@ test_dataloader = dict(
         backend_args=None))
 val_evaluator = dict(
     type='NuScenesMetric',
-    data_root='/home/efs/users/mateusz/data/nuscenes/',
-    ann_file='/home/efs/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
+    ann_file='/home/ubuntu/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
     metric='bbox',
     backend_args=None)
 test_evaluator = dict(
     type='NuScenesMetric',
-    data_root='/home/efs/users/mateusz/data/nuscenes/',
-    ann_file='/home/efs/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
+    ann_file='/home/ubuntu/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
     metric='bbox',
     backend_args=None)
 vis_backends = [
@@ -357,8 +357,7 @@ model = dict(
         score_thr=0.05,
         min_bbox_size=0,
         max_per_img=200))
-train_cfg = dict(
-    type='EpochBasedTrainLoop', max_epochs=12, val_begin=3, val_interval=1)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=12, val_interval=1)
 val_cfg = dict(type='ValLoop')
 test_cfg = dict(type='TestLoop')
 param_scheduler = [
