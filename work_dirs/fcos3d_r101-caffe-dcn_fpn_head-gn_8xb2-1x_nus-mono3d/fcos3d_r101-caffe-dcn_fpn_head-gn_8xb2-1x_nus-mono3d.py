@@ -1,5 +1,5 @@
 dataset_type = 'NuScenesDataset'
-data_root = '/home/ubuntu/users/mateusz/data/nuscenes/'
+data_root = 'data/nuscenes/'
 class_names = [
     'car',
     'truck',
@@ -36,7 +36,10 @@ train_pipeline = [
         with_bbox_3d=True,
         with_label_3d=True,
         with_bbox_depth=True),
-    dict(type='Resize3D', scale=(480, ), keep_ratio=True),
+    dict(type='mmdet.Resize', scale=(
+        1600,
+        900,
+    ), keep_ratio=True),
     dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
     dict(
         type='Pack3DDetInputs',
@@ -53,7 +56,7 @@ train_pipeline = [
 ]
 test_pipeline = [
     dict(type='LoadImageFromFileMono3D', backend_args=None),
-    dict(type='Resize3D', scale=(480, ), keep_ratio=True),
+    dict(type='mmdet.Resize', scale_factor=1.0),
     dict(type='Pack3DDetInputs', keys=[
         'img',
     ]),
@@ -65,7 +68,7 @@ train_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=True),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
+        data_root='data/nuscenes/',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -86,7 +89,10 @@ train_dataloader = dict(
                 with_bbox_3d=True,
                 with_label_3d=True,
                 with_bbox_depth=True),
-            dict(type='Resize3D', scale=(480, ), keep_ratio=True),
+            dict(type='mmdet.Resize', scale=(
+                1600,
+                900,
+            ), keep_ratio=True),
             dict(type='RandomFlip3D', flip_ratio_bev_horizontal=0.5),
             dict(
                 type='Pack3DDetInputs',
@@ -126,7 +132,7 @@ val_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
+        data_root='data/nuscenes/',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -139,7 +145,7 @@ val_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='Resize3D', scale=(480, ), keep_ratio=True),
+            dict(type='mmdet.Resize', scale_factor=1.0),
             dict(type='Pack3DDetInputs', keys=[
                 'img',
             ]),
@@ -169,7 +175,7 @@ test_dataloader = dict(
     sampler=dict(type='DefaultSampler', shuffle=False),
     dataset=dict(
         type='NuScenesDataset',
-        data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
+        data_root='data/nuscenes/',
         data_prefix=dict(
             pts='',
             CAM_FRONT='samples/CAM_FRONT',
@@ -182,7 +188,7 @@ test_dataloader = dict(
         load_type='mv_image_based',
         pipeline=[
             dict(type='LoadImageFromFileMono3D', backend_args=None),
-            dict(type='Resize3D', scale=(480, ), keep_ratio=True),
+            dict(type='mmdet.Resize', scale_factor=1.0),
             dict(type='Pack3DDetInputs', keys=[
                 'img',
             ]),
@@ -206,14 +212,14 @@ test_dataloader = dict(
         backend_args=None))
 val_evaluator = dict(
     type='NuScenesMetric',
-    data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
-    ann_file='/home/ubuntu/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    data_root='data/nuscenes/',
+    ann_file='data/nuscenes/nuscenes_infos_val.pkl',
     metric='bbox',
     backend_args=None)
 test_evaluator = dict(
     type='NuScenesMetric',
-    data_root='/home/ubuntu/users/mateusz/data/nuscenes/',
-    ann_file='/home/ubuntu/users/mateusz/data/nuscenes/nuscenes_infos_val.pkl',
+    data_root='data/nuscenes/',
+    ann_file='data/nuscenes/nuscenes_infos_val.pkl',
     metric='bbox',
     backend_args=None)
 vis_backends = [
@@ -255,7 +261,9 @@ model = dict(
         norm_cfg=dict(type='BN', requires_grad=False),
         norm_eval=True,
         style='caffe',
-        init_cfg=None,
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='open-mmlab://detectron2/resnet101_caffe'),
         dcn=dict(type='DCNv2', deform_groups=1, fallback_on_stride=False),
         stage_with_dcn=(
             False,
@@ -389,7 +397,7 @@ default_hooks = dict(
     timer=dict(type='IterTimerHook'),
     logger=dict(type='LoggerHook', interval=50),
     param_scheduler=dict(type='ParamSchedulerHook'),
-    checkpoint=dict(type='CheckpointHook', interval=1),
+    checkpoint=dict(type='CheckpointHook', interval=-1),
     sampler_seed=dict(type='DistSamplerSeedHook'),
     visualization=dict(type='Det3DVisualizationHook'))
 env_cfg = dict(

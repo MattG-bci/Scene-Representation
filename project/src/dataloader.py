@@ -105,7 +105,7 @@ class NuScenesDataset(Dataset):
 
 if __name__ == "__main__":
     SENSORS = ["CAM_FRONT", "CAM_BACK"]
-    data_root = "/home/ubuntu/users/mateusz/data"
+    data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
     transform = transforms.Compose([transforms.PILToTensor(),
                                     transforms.Resize(size=200), 
                                     transforms.ConvertImageDtype(torch.float32)])

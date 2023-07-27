@@ -15,7 +15,7 @@ backbone = torchvision.models.resnet50()
 model = DINO(backbone)
 transform = transforms.Compose([
     transforms.Resize(size=224),
-    DINOTransform(global_crop_size=200, local_crop_size=96, cj_prob=0.0, hf_prob=0.0, solarization_prob=0.0, random_gray_scale=0.0, gaussian_blur=(0.0, 0.0, 0.0), normalize=None) # they use RandomResizeCrop so int => (size, size)
+    DINOTransform(global_crop_size=170, local_crop_size=64, cj_prob=0.0, hf_prob=0.0, solarization_prob=0.0, random_gray_scale=0.0, gaussian_blur=(0.0, 0.0, 0.0), normalize=None) # they use RandomResizeCrop so int => (size, size)
 ])
 data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
 train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="train")
@@ -23,7 +23,7 @@ val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, s
 
 train_dataloader = torch.utils.data.DataLoader(
     train_dataset,
-    batch_size=256,
+    batch_size=128,
     shuffle=True,
     drop_last=False,
     num_workers=4
@@ -31,7 +31,7 @@ train_dataloader = torch.utils.data.DataLoader(
 
 val_dataloader = torch.utils.data.DataLoader(
     val_dataset,
-    batch_size=256,
+    batch_size=128,
     shuffle=False,
     drop_last=False,
     num_workers=4
