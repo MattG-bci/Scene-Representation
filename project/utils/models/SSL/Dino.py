@@ -7,9 +7,7 @@ import numpy as np
 from lightly.loss import DINOLoss
 from lightly.models.modules import DINOProjectionHead
 from lightly.models.utils import deactivate_requires_grad, update_momentum
-from lightly.transforms.dino_transform import DINOTransform
 from lightly.utils.scheduler import cosine_schedule
-from torchsummary import summary
 
 
 class DINO(pl.LightningModule):
