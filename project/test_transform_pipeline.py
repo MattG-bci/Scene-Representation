@@ -6,8 +6,6 @@ from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
-sys.path.insert(0, "../")
-
 from utils.transforms.protonet_transform import *
 from src.dataloader import *
 from utils.models.SSL.Dino import *

@@ -85,6 +85,7 @@ class CrossModalNuScenesDataset(Dataset):
         self.data_path = data_path
         self.sensors = sensors 
         self.split = split
+        self.max_pts = self._get_max_pc_points()
         self.scene_names = self._get_scenes()
         self.dataset = self._initialise_database()
 
@@ -124,16 +125,32 @@ class CrossModalNuScenesDataset(Dataset):
 
         return scenes[self.split]
     
+    def _get_max_pc_points(self):
+        samples = self.nusc.sample
+        max_pts = 0
+        for sample in samples:
+            sample_pc_token = sample["data"]["LIDAR_TOP"]
+            pc_path = self.nusc.get("sample_data", sample_pc_token)["filename"]
+            pc_path = os.path.join(self.data_path, pc_path)
+            pc = self._open_lidar(pc_path)
+            if pc.shape[1] > max_pts:
+                max_pts = pc.shape[1]
+        return max_pts
+            
     def _open_lidar(self, x):
         lidar_pointcloud = LidarPointCloud.from_file(x)
         return lidar_pointcloud.points
     
-    def _pc_translation(self, point_cloud, translation):
-        return point_cloud + translation
+    def _pad_point_cloud(self, x):
+        n_points = x.shape[1]
+        n_features = x.shape[0]
+        if n_points < self.max_pts:
+            padding = np.zeros((n_features, self.max_pts - n_points), dtype=np.float32)
+            pc_padded = np.concatenate([x.T, padding.T]).T
+        else:
+            pc_padded = x[:, :self.max_pts]
+        return pc_padded
     
-    def _pc_scaling(self, point_cloud, scaling_factor):
-        return point_cloud * scaling_factor
-
     def visualise_point_cloud(self, point_cloud, dim="2d"):
         assert dim in ["2d", "3d"], \
             "Dim for the visualidation not valid. Please use either \"2d\" or \"3d\"."
@@ -176,6 +193,8 @@ class CrossModalNuScenesDataset(Dataset):
         
         if self.transform:
             img, pc, img_transformed, pc_transformed = self.transform(img, lidar)
+            pc = self._pad_point_cloud(pc)
+            pc_transformed = self._pad_point_cloud(pc_transformed)
             #save_img = Image.fromarray(((img.cpu().numpy()) * 255).astype(np.uint8))
             #save_img.save("transformed_img.jpg")
             #pc = self._pc_scaling(lidar, np.array([1.2, 1.2, 1.2, 1.0]))
