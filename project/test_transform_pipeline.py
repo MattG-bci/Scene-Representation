@@ -7,6 +7,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 
 from utils.transforms.protonet_transform import *
+from utils.models.SSL.prototype import *
+from utils.models.backbones.scripts.PointNet import *
 from src.dataloader import *
 from utils.models.SSL.Dino import *
 
@@ -27,6 +29,11 @@ train_dataloader = torch.utils.data.DataLoader(
     num_workers=4
 )
 
+img_backbone = torchvision.models.resnet50()
+pc_backbone = PointNet(point_dim=4, return_local_features=False)
+model = ProtoNet(img_backbone, pc_backbone)
 for idx, batch in enumerate(train_dataloader): # padding point clouds
-    print(batch)
+    img = batch[2]
+    pc = batch[3]
+    model((img, pc))
     break

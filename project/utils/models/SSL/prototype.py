@@ -19,8 +19,8 @@ from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
 
-sys.path.insert(0, "../")
-from backbones.scripts.PointNet import PointNet
+#sys.path.insert(0, "../")
+#from backbones.scripts.PointNet import PointNet
 
 
 class CrossAttentionModule(nn.Module):
@@ -73,7 +73,7 @@ class ProtoNet(pl.LightningModule):
 
     def forward(self, x):
         imgs = x[0]
-        point_cloud = x[1]
+        point_cloud = x[1].float()
         vision_features = self.img_backbone(imgs)
         vision_features = vision_features.squeeze(-2)
         point_cloud_features, _ = self.point_backbone(point_cloud)

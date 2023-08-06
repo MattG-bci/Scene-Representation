@@ -201,7 +201,7 @@ class CrossModalNuScenesDataset(Dataset):
             #pc = self._pc_translation(pc, np.array([0.8, 0.8, 0.8, 0.0]))
             
         #self.visualise_point_cloud(pc.T, dim="3d")
-        return [img, pc, img_transformed, pc_transformed]
+        return [img, pc.T, img_transformed, pc_transformed.T]
 
 
 
