@@ -13,8 +13,8 @@ from torchvision import transforms
 
 NUSC = None
 class NuScenesDataset(Dataset):
-    def __init__(self, data_path, sensors, split="train", transform=None):
-        self.nusc = self._get_nuscenes_db(data_path, "v1.0-mini") #NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=False)
+    def __init__(self, data_path, sensors, split="train", version="v1.0-trainval", transform=None):
+        self.nusc = self._get_nuscenes_db(data_path, version=version) #NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=False)
         self.data_path = data_path
         self.sensors = sensors 
         self.split = split
@@ -195,12 +195,6 @@ class CrossModalNuScenesDataset(Dataset):
             img, pc, img_transformed, pc_transformed = self.transform(img, lidar)
             pc = self._pad_point_cloud(pc)
             pc_transformed = self._pad_point_cloud(pc_transformed)
-            #save_img = Image.fromarray(((img.cpu().numpy()) * 255).astype(np.uint8))
-            #save_img.save("transformed_img.jpg")
-            #pc = self._pc_scaling(lidar, np.array([1.2, 1.2, 1.2, 1.0]))
-            #pc = self._pc_translation(pc, np.array([0.8, 0.8, 0.8, 0.0]))
-            
-        #self.visualise_point_cloud(pc.T, dim="3d")
         return [img, pc.T, img_transformed, pc_transformed.T]
 
 

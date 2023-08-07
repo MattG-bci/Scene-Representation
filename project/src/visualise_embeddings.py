@@ -10,12 +10,12 @@ from sklearn.manifold import TSNE
 sys.path.insert(0, "../")
 
 from src.dataloader import *
-from utils.models.SSL.Dino import *
+from utils.models.SSL.DINO import *
 
 warnings.filterwarnings("ignore")
 
 def load_backbone(checkpoint_path, model_class, backbone):
-    model = model_class.load_from_checkpoint(checkpoint_path)
+    model = model_class.load_from_checkpoint(checkpoint_path, backbone=backbone)
     backbone = model._modules[backbone]
     return backbone
 

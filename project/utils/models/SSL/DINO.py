@@ -13,6 +13,7 @@ from lightly.utils.scheduler import cosine_schedule
 class DINO(pl.LightningModule):
     def __init__(self, backbone):
         super().__init__()
+        self.save_hyperparameters()
         backbone = nn.Sequential(*list(backbone.children())[:-1])
         input_dim = 2048
         self.student_backbone = backbone

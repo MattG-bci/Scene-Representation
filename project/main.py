@@ -1,8 +1,9 @@
 from multiprocessing.dummy import freeze_support
-from utils.models.SSL.Dino import *
+from utils.models.SSL.DINO import *
 from torchvision import transforms
 from src.dataloader import *
 import warnings
+import wandb
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.callbacks.early_stopping import EarlyStopping
@@ -15,11 +16,11 @@ backbone = torchvision.models.resnet50()
 model = DINO(backbone)
 transform = transforms.Compose([
     transforms.Resize(size=224),
-    DINOTransform(global_crop_size=170, local_crop_size=64, cj_prob=0.0, hf_prob=0.0, solarization_prob=0.0, random_gray_scale=0.0, gaussian_blur=(0.0, 0.0, 0.0), normalize=None) # they use RandomResizeCrop so int => (size, size)
+    DINOTransform(global_crop_size=170, local_crop_size=64, cj_prob=0.8, hf_prob=0.0, solarization_prob=0.0, random_gray_scale=0.2, gaussian_blur=(0.0, 0.0, 0.0), normalize=None) # they use RandomResizeCrop so int => (size, size)
 ])
 data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
-train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="train")
-val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, split="val")
+train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, version="v1.0-trainval", split="train")
+val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, version="v1.0-trainval", split="val")
 
 train_dataloader = torch.utils.data.DataLoader(
     train_dataset,
@@ -42,7 +43,9 @@ if __name__ == "__main__":
     freeze_support()
     torch.set_float32_matmul_precision("medium")
     logger = TensorBoardLogger("/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs", name="DINOv1 - NuScenes")
-    checkpoint_callback = ModelCheckpoint(monitor="val_loss")
+    #wandb.init("DINOv1 - NuScenes")
+    #logger = WandbLogger(project="DINOv1 - NuScenes")
+    checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min")
     early_stopping_callback = EarlyStopping(monitor="val_loss", mode="min")
     accelerator = "cuda" if torch.cuda.is_available() else "cpu"
 

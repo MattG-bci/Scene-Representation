@@ -19,9 +19,6 @@ from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
 
-#sys.path.insert(0, "../")
-#from backbones.scripts.PointNet import PointNet
-
 
 class CrossAttentionModule(nn.Module):
     def __init__(self, in_channels_query, in_channels_kv, out_channels, num_heads=16):
@@ -91,6 +88,9 @@ class ProtoNet(pl.LightningModule):
 
 if __name__ == "__main__":
     import torchvision
+    sys.path.insert(0, "../")
+    from backbones.scripts.PointNet import PointNet
+    
     img_backbone = torchvision.models.resnet50()
     point_backbone = PointNet(point_dim=3, return_local_features=False)
     model = ProtoNet(img_backbone, point_backbone)
@@ -99,5 +99,5 @@ if __name__ == "__main__":
     x = (imgs, point_cloud)
     transforms = torchvision.transforms.Compose([torchvision.transforms.RandomResizedCrop(size=200)])
     out = transforms(x[0])
-    print(out)
-    #model(x)
+
+    
