@@ -21,24 +21,20 @@ def extract_from_pickle(path):
         new_state_dict[new_name] = weight
     return new_state_dict
 
+def extract_features_from_pickle(path, model):
+    file = open(path, "rb")
+    data = pickle.load(file)
+    new_state_dict = {}
+    for (key, val), (key_pickle, val_pickle) in zip(model.state_dict().items(), data.items()):
+        new_state_dict[key] = val_pickle
+    return new_state_dict
 
 if __name__ == "__main__":
-    #path = "/home/ubuntu/users/mateusz/cascade_rcnn_r50_fpn_1x_det_bdd100k.pth"
-    #model = torchvision.models.resnet50()
-    #model.fc = torch.nn.Sequential()
-    #state_dict = extract_backbone_weights(path)
-    
-    #model.load_state_dict(state_dict)
-    #torch.save(model.state_dict(), "bdd_det_backbone.pth")
-    #print(model)
-    path =  "/home/ubuntu/users/mateusz/carnet_depth_resnet50.pickle"
+    path =  "/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/carnet_depth_resnet50.pickle"
     state_dict = extract_from_pickle(path)
-    model = torchvision.models.resnet50()
-    #model.fc = torch.nn.Sequential()
-    try:
-        model.load_state_dict(state_dict)
-    except RuntimeError as e:
-        print('Ignoring "' + str(e) + '"')
-    torch.save(model.state_dict(), "depth_backbone.pth")
-    print(model)
+    model = torchvision.models.resnet18()
+    model.fc = torch.nn.Sequential()
+    state_dict = extract_features_from_pickle(path, model)
+    model.load_state_dict(state_dict)
+
 
