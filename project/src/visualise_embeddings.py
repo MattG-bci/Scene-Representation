@@ -37,6 +37,7 @@ def plot_imgs_from_points(dataloader, pts):
             plt.savefig("test.jpg")
 
 def plot_embeddings(network, dataloader, batch_size, save_components=True):
+    network.to("cuda")
     network.eval()
     all_features = np.empty((len(dataloader) * batch_size, 2048), dtype=np.float32)
     for idx, batch in enumerate(dataloader):
@@ -68,7 +69,8 @@ if __name__ == "__main__":
     backbone = torchvision.models.resnet50()
     backbone.fc = nn.Sequential()
     checkpoint_path = "/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs/DINOv1 - NuScenes/multi-view + colorjitter + grayscale/checkpoints/epoch=40-step=9020.ckpt"
-    student_network = load_backbone(checkpoint_path, DINO, backbone, "student_backbone")
+    #student_network = load_backbone(checkpoint_path, DINO, backbone, "student_backbone")
+    backbone.load_state_dict(torch.load("/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/bdd_det_rn50_backbone.pth"))
     #torch.save(student_network.state_dict(), "/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/dino_rn50.pth")
 
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"#_tiny/v1.0-trainval"
@@ -90,5 +92,5 @@ if __name__ == "__main__":
         num_workers=4
     )
 
-    plot_embeddings(student_network, val_dataloader, batch_size, save_components=False)
+    plot_embeddings(backbone, val_dataloader, batch_size, save_components=False)
     plot_imgs_from_points(val_dataloader, pts=[1])
