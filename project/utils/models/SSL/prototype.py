@@ -18,6 +18,8 @@ import torch.utils.data
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
+import lightly
+from lightly.models.modules.heads import MoCoProjectionHead
 
 
 class CrossAttentionModule(nn.Module):
@@ -67,9 +69,13 @@ class ProtoNet(pl.LightningModule):
         self.point_backbone = point_backbone
         self.cross_attention_module = CrossAttentionModule(in_channels_query=1, in_channels_kv=1, out_channels=64, num_heads=1) # probably not very useful
         self.conv = nn.Conv2d(kernel_size=1, in_channels=64, out_channels=1)
+        self.projection_head = MoCoProjectionHead(4096, 2048, 128)
+        
+        self.projection_head_aug = copy.deepcopy(self.projection_head)
+        self.criterion = lightly.loss.NTXentLoss(temperature=0.1, memory_bank_size=4096)
 
     def forward(self, x):
-        imgs = x[0]
+        imgs = x[0].float()
         point_cloud = x[1].float()
         vision_features = self.img_backbone(imgs)
         vision_features = vision_features.squeeze(-2)
@@ -83,21 +89,32 @@ class ProtoNet(pl.LightningModule):
         return fused_features
     
     def training_step(self, batch, batch_idx):
-        fused_features = self.forward(batch)
+        fused_features = self.forward(batch[:2]).flatten(start_dim=1)
+        aug_fused_features = self.forward(batch[2:]).flatten(start_dim=1)
+        q = self.projection_head(fused_features)
+        v = self.projection_head_aug(aug_fused_features)
+        loss = self.criterion(q, v)
+        return loss
+    
+    def configure_optimizers(self):
+        optim = torch.optim.AdamW(self.parameters(), lr=0.001, weight_decay=1e-7)
+        return optim
 
 
 if __name__ == "__main__":
     import torchvision
-    sys.path.insert(0, "../")
-    from backbones.scripts.PointNet import PointNet
-    
+    sys.path.insert(0, "../../")
+    from models.backbones.scripts.PointNet import PointNet
+    from transforms.protonet_transform import ProtoNetTransform
+        
     img_backbone = torchvision.models.resnet50()
-    point_backbone = PointNet(point_dim=3, return_local_features=False)
+    point_backbone = PointNet(point_dim=4, return_local_features=False)
     model = ProtoNet(img_backbone, point_backbone)
-    point_cloud = torch.rand(2, 30000, 3)
+    point_cloud = torch.rand(2, 30000, 4)
     imgs = torch.rand(2, 3, 224, 224)
-    x = (imgs, point_cloud)
-    transforms = torchvision.transforms.Compose([torchvision.transforms.RandomResizedCrop(size=200)])
-    out = transforms(x[0])
+    
+    transforms = ProtoNetTransform()
+    x = transforms(imgs, point_cloud)
+    print(model.training_step(x, 0))
 
     
