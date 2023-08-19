@@ -115,8 +115,12 @@ class CrossModalNuScenesDataset(Dataset):
                     cam_file_name = cam_data["filename"]
                     lidar_data = self.nusc.get("sample_data", sample["data"]["LIDAR_TOP"])
                     lidar_file_name = lidar_data["filename"]
-                    data.append([os.path.join(self.data_path, cam_file_name), os.path.join(self.data_path, lidar_file_name)])
+                    data.append([os.path.join(self.data_path, cam_file_name), sample["token"]])
         return data
+    
+    def retrieve_relevant_pc(self, sample_token):
+        points_3d = self.nusc.render_pointcloud_in_image(sample_token, pointsensor_channel="LIDAR_TOP")
+        return points_3d
     
     def _get_scenes(self):
         scenes = create_splits_scenes()
@@ -129,10 +133,10 @@ class CrossModalNuScenesDataset(Dataset):
         samples = self.nusc.sample
         max_pts = 0
         for sample in samples:
-            sample_pc_token = sample["data"]["LIDAR_TOP"]
-            pc_path = self.nusc.get("sample_data", sample_pc_token)["filename"]
-            pc_path = os.path.join(self.data_path, pc_path)
-            pc = self._open_lidar(pc_path)
+            #sample_pc_token = sample["data"]["LIDAR_TOP"]
+            #pc_path = self.nusc.get("sample_data", sample_pc_token)["filename"]
+            #pc_path = os.path.join(self.data_path, pc_path)
+            pc = self.retrieve_relevant_pc(sample["token"])
             if pc.shape[1] > max_pts:
                 max_pts = pc.shape[1]
         return max_pts
@@ -151,7 +155,7 @@ class CrossModalNuScenesDataset(Dataset):
             pc_padded = x[:, :self.max_pts]
         return pc_padded
     
-    def visualise_point_cloud(self, point_cloud, dim="2d"):
+    def visualise_point_cloud(self, point_cloud, dim="3d"):
         assert dim in ["2d", "3d"], \
             "Dim for the visualidation not valid. Please use either \"2d\" or \"3d\"."
 
@@ -188,14 +192,17 @@ class CrossModalNuScenesDataset(Dataset):
     def __getitem__(self, index):
         data_point = self.dataset[index]
         img_path = data_point[0]
-        lidar = self._open_lidar(data_point[1])
+        img_token = data_point[1]
+        #lidar = self._open_lidar(data_point[1])
         img = transforms.PILToTensor()(Image.open(img_path))
+        pc = self.retrieve_relevant_pc(img_token)
+        self.visualise_point_cloud(pc)
         
-        if self.transform:
-            img, pc, img_transformed, pc_transformed = self.transform(img, lidar)
-            pc = self._pad_point_cloud(pc)
-            pc_transformed = self._pad_point_cloud(pc_transformed)
-        return [img, pc.T, img_transformed, pc_transformed.T]
+        #if self.transform:
+        #    img, pc, img_transformed, pc_transformed = self.transform(img, lidar)
+        #    pc = self._pad_point_cloud(pc)
+        #    pc_transformed = self._pad_point_cloud(pc_transformed)
+        return img, pc#[img, pc.T, img_transformed, pc_transformed.T]
 
 
 
@@ -206,6 +213,6 @@ if __name__ == "__main__":
                                     transforms.Resize(size=224),
                                     transforms.RandomAffine(degrees=0, translate=[0.1, 0.1], scale=[1.2, 1.2]), 
                                     transforms.ConvertImageDtype(torch.float32)])
-    dataset = CrossModalNuScenesDataset(data_root, transform=transform, sensors=SENSORS, split="mini_train")
+    dataset = CrossModalNuScenesDataset(data_root, transform=transform, sensors=SENSORS, version="v1.0-mini", split="mini_train")
     print(len(dataset))
-    print(dataset[0])
+    print(len(dataset[0]))

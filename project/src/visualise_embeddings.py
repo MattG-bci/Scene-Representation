@@ -11,17 +11,10 @@ sys.path.insert(0, "../")
 
 from src.dataloader import *
 from utils.models.SSL.DINO import *
+from extract_resnet_weights import load_backbone
 
 warnings.filterwarnings("ignore")
 
-def load_backbone(checkpoint_path, model_class, backbone_model, target):
-    model = model_class.load_from_checkpoint(checkpoint_path, backbone=backbone_model)
-    backbone = model._modules[target]
-    state_dict = {}
-    for (key, val), (k, v) in zip(backbone_model.state_dict().items(), backbone.state_dict().items()):
-        state_dict[key] = v
-    backbone_model.load_state_dict(state_dict)
-    return backbone_model
 
 def save_features(features):
     df = pd.DataFrame(data=features)

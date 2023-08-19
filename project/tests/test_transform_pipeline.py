@@ -31,6 +31,6 @@ train_dataloader = torch.utils.data.DataLoader(
 img_backbone = torchvision.models.resnet50()
 pc_backbone = PointNet(point_dim=4, return_local_features=False)
 model = ProtoNet(img_backbone, pc_backbone)
+model = model.to("cuda")
 for idx, batch in enumerate(train_dataloader):
     print(model.training_step(batch, idx))
-    break

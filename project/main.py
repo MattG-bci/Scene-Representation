@@ -10,13 +10,13 @@ from pytorch_lightning.callbacks.early_stopping import EarlyStopping
 from lightly.transforms.dino_transform import DINOTransform
 
 warnings.filterwarnings("ignore")
-SENSORS = ["CAM_FRONT"]
+SENSORS = ["CAM_FRONT", "CAM_BACK"]
 
 backbone = torchvision.models.resnet50() 
 model = DINO(backbone)
 transform = transforms.Compose([
-    transforms.Resize(size=224),
-    DINOTransform(global_crop_size=170, local_crop_size=64, cj_prob=0.8, hf_prob=0.0, solarization_prob=0.0, random_gray_scale=0.2, gaussian_blur=(0.0, 0.0, 0.0), normalize=None) # they use RandomResizeCrop so int => (size, size)
+    transforms.Resize(size=200),
+    DINOTransform(global_crop_size=126, local_crop_size=48, n_local_views=6, cj_prob=0.8, hf_prob=0.5, solarization_prob=0.0, random_gray_scale=0.2, gaussian_blur=(1, 0.1, 0.5), normalize=None) # they use RandomResizeCrop so int => (size, size)
 ])
 data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
 train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, version="v1.0-trainval", split="train")
@@ -24,7 +24,7 @@ val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, v
 
 train_dataloader = torch.utils.data.DataLoader(
     train_dataset,
-    batch_size=128,
+    batch_size=256,
     shuffle=True,
     drop_last=False,
     num_workers=4
@@ -32,7 +32,7 @@ train_dataloader = torch.utils.data.DataLoader(
 
 val_dataloader = torch.utils.data.DataLoader(
     val_dataset,
-    batch_size=128,
+    batch_size=256,
     shuffle=False,
     drop_last=False,
     num_workers=4
@@ -49,6 +49,6 @@ if __name__ == "__main__":
     early_stopping_callback = EarlyStopping(monitor="val_loss", mode="min")
     accelerator = "cuda" if torch.cuda.is_available() else "cpu"
 
-    trainer = pl.Trainer(max_epochs=100, accelerator=accelerator, devices=1, logger=logger, callbacks=[checkpoint_callback, early_stopping_callback])
+    trainer = pl.Trainer(max_epochs=100, accelerator=accelerator, logger=logger, devices=1, callbacks=[checkpoint_callback, early_stopping_callback])
     trainer.fit(model, train_dataloader, val_dataloader)
 

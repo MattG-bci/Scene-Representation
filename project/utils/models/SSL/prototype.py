@@ -61,39 +61,70 @@ class CrossAttentionModule(nn.Module):
         output = self.output_projection(attention_output)
         return output
 
+class BlenderModule(nn.Module):
+    def __init__(self, in_features, hidden_features, out_features, n_layers=2):
+        super(BlenderModule, self).__init__()
+        self.in_features = in_features
+        layers = []
+        
+        layers.append([
+            nn.Linear(in_features=in_features, out_features=hidden_features),
+            nn.ReLU(),
+            nn.BatchNorm1d(hidden_features)])
+        for _ in range(n_layers):
+            layers.append([nn.Linear(in_features=hidden_features, out_features=hidden_features),
+                           nn.ReLU(),
+                           nn.BatchNorm1d(hidden_features)])
+        layers = [layers[i][j] for i in range(len(layers)) for j in range(len(layers[i]))]
+        layers.append(nn.Linear(in_features=hidden_features, out_features=out_features))
+        self.blender_network = nn.Sequential(*layers)
+    
+    def forward(self, features_1, features_2):
+        fused_features = torch.cat([features_1, features_2], dim=1)
+        
+        assert fused_features.shape[1] == self.in_features, \
+            f"Mismatch of dimensions. Got input of dimension {fused_features.shape} but defined {self.in_features} as input features."
+        
+        out = self.blender_network(fused_features)
+        return out
 
 class ProtoNet(pl.LightningModule):
     def __init__(self, img_backbone, point_backbone) -> None:
         super().__init__()
         self.img_backbone = nn.Sequential(*list(img_backbone.children())[:-1])
         self.point_backbone = point_backbone
-        self.cross_attention_module = CrossAttentionModule(in_channels_query=1, in_channels_kv=1, out_channels=64, num_heads=1) # probably not very useful
-        self.conv = nn.Conv2d(kernel_size=1, in_channels=64, out_channels=1)
-        self.projection_head = MoCoProjectionHead(4096, 2048, 128)
+        #self.cross_attention_module = CrossAttentionModule(in_channels_query=1, in_channels_kv=1, out_channels=64, num_heads=1) # probably not very useful
+        #self.conv = nn.Conv2d(kernel_size=1, in_channels=64, out_channels=1)
+        #self.projection_head = MoCoProjectionHead(4096, 2048, 128)
         
-        self.projection_head_aug = copy.deepcopy(self.projection_head)
-        self.criterion = lightly.loss.NTXentLoss(temperature=0.1, memory_bank_size=4096)
+        #self.projection_head_aug = copy.deepcopy(self.projection_head)
+        
+        
+        self.blender_module = BlenderModule(in_features=4096, hidden_features=2048, out_features=2048)
+        self.criterion = lightly.loss.NTXentLoss(temperature=0.1, memory_bank_size=4096) # loss subject to change
 
     def forward(self, x):
-        imgs = x[0].float()
-        point_cloud = x[1].float()
+        imgs = x[0].float().to(self.device)
+        pc = x[1].float().to(self.device)
         vision_features = self.img_backbone(imgs)
         vision_features = vision_features.squeeze(-2)
-        point_cloud_features, _ = self.point_backbone(point_cloud)
-        point_cloud_features = point_cloud_features.unsqueeze(-1)
-        attention_out = self.cross_attention_module(vision_features, point_cloud_features, point_cloud_features)
-        attention_out = attention_out.transpose(0, -1)
-        out = self.conv(attention_out)
-        out = out.transpose(0, -1)
-        fused_features = torch.cat([vision_features, out], 1)
-        return fused_features
+        pc_features, _ = self.point_backbone(pc)
+        pc_features = pc_features.unsqueeze(-1)
+        #attention_out = self.cross_attention_module(vision_features, point_cloud_features, point_cloud_features)
+        #attention_out = attention_out.transpose(0, -1)
+        #out = self.conv(attention_out)
+        #out = out.transpose(0, -1)
+        #fused_features = torch.cat([vision_features, out], 1)
+        return vision_features, pc_features
     
     def training_step(self, batch, batch_idx):
-        fused_features = self.forward(batch[:2]).flatten(start_dim=1)
-        aug_fused_features = self.forward(batch[2:]).flatten(start_dim=1)
-        q = self.projection_head(fused_features)
-        v = self.projection_head_aug(aug_fused_features)
-        loss = self.criterion(q, v)
+        vision_features, pc_features = self.forward(batch).flatten(start_dim=1)
+        fused_features = self.blender_module(vision_features, pc_features)
+        
+        #aug_fused_features = self.forward(batch[2:]).flatten(start_dim=1)
+        #q = self.projection_head(fused_features)
+        #v = self.projection_head_aug(aug_fused_features)
+        loss = self.criterion(vision_features, fused_features)
         return loss
     
     def configure_optimizers(self):

@@ -15,7 +15,6 @@
             "program": "${file}",
             "cwd": "$(workspaceFolder)/Scene-Representation/project/src",
             "console": "integratedTerminal",
-            "stopOnEntry": true,
             "justMyCode": false
         }
     ]
