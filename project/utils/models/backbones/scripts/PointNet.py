@@ -41,8 +41,8 @@ class TransformationNet(nn.Module):
     x = self.fc3(x)
 
     eye = torch.eye(self.output_dim)
-    #if torch.cuda.is_available():
-    #  eye = eye.cuda()
+    if torch.cuda.is_available():
+      eye = eye.cuda()
 
     x = x.view(-1, self.output_dim, self.output_dim) + eye
     return x

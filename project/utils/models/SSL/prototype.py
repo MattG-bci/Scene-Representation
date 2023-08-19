@@ -80,7 +80,7 @@ class BlenderModule(nn.Module):
         self.blender_network = nn.Sequential(*layers)
     
     def forward(self, features_1, features_2):
-        fused_features = torch.cat([features_1, features_2], dim=1)
+        fused_features = torch.cat([features_1, features_2], dim=1).squeeze(-1)
         
         assert fused_features.shape[1] == self.in_features, \
             f"Mismatch of dimensions. Got input of dimension {fused_features.shape} but defined {self.in_features} as input features."
@@ -101,7 +101,7 @@ class ProtoNet(pl.LightningModule):
         
         
         self.blender_module = BlenderModule(in_features=4096, hidden_features=2048, out_features=2048)
-        self.criterion = lightly.loss.NTXentLoss(temperature=0.1, memory_bank_size=4096) # loss subject to change
+        self.criterion = lightly.loss.DINOLoss(output_dim=2048) # loss subject to change
 
     def forward(self, x):
         imgs = x[0].float().to(self.device)
@@ -118,13 +118,12 @@ class ProtoNet(pl.LightningModule):
         return vision_features, pc_features
     
     def training_step(self, batch, batch_idx):
-        vision_features, pc_features = self.forward(batch).flatten(start_dim=1)
+        vision_features, pc_features = self.forward(batch)
         fused_features = self.blender_module(vision_features, pc_features)
-        
         #aug_fused_features = self.forward(batch[2:]).flatten(start_dim=1)
         #q = self.projection_head(fused_features)
         #v = self.projection_head_aug(aug_fused_features)
-        loss = self.criterion(vision_features, fused_features)
+        loss = self.criterion(vision_features, fused_features, epoch=self.current_epoch)
         return loss
     
     def configure_optimizers(self):
@@ -136,16 +135,38 @@ if __name__ == "__main__":
     import torchvision
     sys.path.insert(0, "../../")
     from models.backbones.scripts.PointNet import PointNet
-    from transforms.protonet_transform import ProtoNetTransform
+    #from transforms.protonet_transform import ProtoNetTransform
         
     img_backbone = torchvision.models.resnet50()
     point_backbone = PointNet(point_dim=4, return_local_features=False)
     model = ProtoNet(img_backbone, point_backbone)
     point_cloud = torch.rand(2, 30000, 4)
     imgs = torch.rand(2, 3, 224, 224)
+    accelerator = "cuda" if torch.cuda.is_available() else "cpu"
     
-    transforms = ProtoNetTransform()
-    x = transforms(imgs, point_cloud)
-    print(model.training_step(x, 0))
+    
+    class CustomDataset(torch.utils.data.Dataset):
+        def __init__(self, img, pc):
+            self.img = img
+            self.pc = pc
+            
+        def __len__(self):
+            return len(self.img)
+        
+        def __getitem__(self, idx):
+            return self.img[idx], self.pc[idx]
+
+    dataset = CustomDataset(imgs, point_cloud)
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=2,
+        shuffle=False,
+        drop_last=False,
+        num_workers=4
+    )
+    
+    #print(model.training_step([imgs, point_cloud], 0))
+    trainer = pl.Trainer(max_epochs=100, accelerator=accelerator, devices=1, fast_dev_run=True)
+    trainer.fit(model, dataloader)
 
     

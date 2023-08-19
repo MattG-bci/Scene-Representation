@@ -50,5 +50,5 @@ if __name__ == "__main__":
     accelerator = "cuda" if torch.cuda.is_available() else "cpu"
 
     trainer = pl.Trainer(max_epochs=100, accelerator=accelerator, logger=logger, devices=1, callbacks=[checkpoint_callback, early_stopping_callback])
-    trainer.fit(model, train_dataloader, val_dataloader)
+    trainer.fit(model, dataloader)
 
