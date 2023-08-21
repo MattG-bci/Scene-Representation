@@ -37,6 +37,10 @@ class CrossAttentionModule(nn.Module):
         self.value_projection = nn.Linear(in_channels_kv, out_channels)
         # Scaled Dot-Product Attention layer
         self.softmax = nn.Softmax(dim=-1)
+        
+        assert num_heads < out_channels, \
+            "The number of heads must be lower than the embedding dimension."
+            
         self.scale_factor = 1.0 / (out_channels // num_heads) ** 0.5
         # Output projection
         self.output_projection = nn.Linear(out_channels, out_channels)
