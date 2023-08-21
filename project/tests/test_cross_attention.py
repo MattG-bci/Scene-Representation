@@ -30,8 +30,8 @@ print("The output: \n")
 print(out)
 
 
-multihead_attn = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16)
-attn_output, attn_output_weights = multihead_attn(img_features.flatten(start_dim=1), pc_features.flatten(start_dim=1), pc_features.flatten(start_dim=1))
+multihead_attn = torch.nn.MultiheadAttention(embed_dim=3, num_heads=3, batch_first=False)
+attn_output, attn_output_weights = multihead_attn(vectors, vectors, vectors)
 print(f"Shape of the Pytorch Attention module output: {attn_output.shape}")
 print("The output: \n")
 print(attn_output)
