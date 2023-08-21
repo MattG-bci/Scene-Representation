@@ -1,0 +1,57 @@
+1. DINO - Multiview + Gaussian Blur + ColorJitter + HorzFlip + GrayScale + 256 Batch Size + Full NuScenes Dataset
+
+backbone = torchvision.models.resnet50() 
+model = DINO(backbone)
+transform = transforms.Compose([
+    transforms.Resize(size=200),
+    DINOTransform(global_crop_size=126, local_crop_size=48, n_local_views=6, cj_prob=0.8, hf_prob=0.5, solarization_prob=0.0, random_gray_scale=0.2, gaussian_blur=(1, 0.1, 0.5), normalize=None) # they use RandomResizeCrop so int => (size, size)
+])
+data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
+train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, version="v1.0-trainval", split="train")
+val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, version="v1.0-trainval", split="val")
+
+train_dataloader = torch.utils.data.DataLoader(
+    train_dataset,
+    batch_size=128,
+    shuffle=True,
+    drop_last=False,
+    num_workers=4
+)
+
+val_dataloader = torch.utils.data.DataLoader(
+    val_dataset,
+    batch_size=128,
+    shuffle=False,
+    drop_last=False,
+    num_workers=4
+)
+
+2. DINO - Multiview + Gaussian Blur + ColorJitter + HorzFlip + VertFlip + GrayScale + 128 Batch Size
+
+SENSORS = ["CAM_FRONT"]
+
+backbone = torchvision.models.resnet50() 
+model = DINO(backbone)
+transform = transforms.Compose([
+    transforms.Resize(size=224),
+    DINOTransform(global_crop_size=170, local_crop_size=64, n_local_views=6, cj_prob=0.8, hf_prob=0.5, vf_prob=0.5, solarization_prob=0.0, random_gray_scale=0.2, gaussian_blur=(1, 0.1, 0.5), normalize=None) # they use RandomResizeCrop so int => (size, size)
+])
+data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
+train_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, version="v1.0-trainval", split="train")
+val_dataset = NuScenesDataset(data_root, sensors=SENSORS, transform=transform, version="v1.0-trainval", split="val")
+
+train_dataloader = torch.utils.data.DataLoader(
+    train_dataset,
+    batch_size=128,
+    shuffle=True,
+    drop_last=False,
+    num_workers=4
+)
+
+val_dataloader = torch.utils.data.DataLoader(
+    val_dataset,
+    batch_size=128,
+    shuffle=False,
+    drop_last=False,
+    num_workers=4
+)
