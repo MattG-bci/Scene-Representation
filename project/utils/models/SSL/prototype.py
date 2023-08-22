@@ -99,8 +99,7 @@ class Network(pl.LightningModule):
         self.point_backbone = point_backbone
         self.cross_attention_module = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16, batch_first=True)
         self.sigmoid = torch.nn.Sigmoid()
-        self.criterion = torch.nn.CrossEntropyLoss()
-
+        self.criterion = torch.nn.BCELoss()
 
 
     def forward(self, x):
@@ -118,15 +117,18 @@ class Network(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         original_fused_features = self.sigmoid(self.forward(batch[:2]))
         random_fused_features = self.sigmoid(self.forward(batch[2:]))
-
-        loss = self.criterion(original_fused_features.flatten(), random_fused_features.flatten())
+        total_loss = 0
+        for i in range(len(original_fused_features)):
+            loss = self.criterion(original_fused_features[i], random_fused_features[i])
+            total_loss += loss
+        total_loss /= len(original_fused_features)
         self.log_dict({
-            "train_loss": loss},
+            "train_loss": total_loss},
             on_step=True,
             on_epoch=True,
             prog_bar=True
         )
-        return {"loss": loss}
+        return {"loss": total_loss}
     
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):

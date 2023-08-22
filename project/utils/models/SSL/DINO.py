@@ -74,7 +74,7 @@ class DINO(pl.LightningModule):
         self.student_head.cancel_last_layer_gradients(current_epoch=self.current_epoch)
 
     def configure_optimizers(self):
-        optim = torch.optim.AdamW(self.parameters(), lr=0.4, weight_decay=1e-7)
+        optim = torch.optim.AdamW(self.parameters(), lr=0.001, weight_decay=1e-7)
         return optim
 
 

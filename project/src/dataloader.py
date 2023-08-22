@@ -81,7 +81,7 @@ class NuScenesDataset(Dataset):
 
 
 class CrossModalNuScenesDataset(Dataset):
-    def __init__(self, data_path, sensors, split="train", version="v1.0-trainval", get_max_pts=False):
+    def __init__(self, data_path, sensors, split="train", version="v1.0-trainval", get_max_pts=False, transform=None):
         self.nusc = self._get_nuscenes_db(data_path, version=version)
         self.data_path = data_path
         self.sensors = sensors 
@@ -91,7 +91,10 @@ class CrossModalNuScenesDataset(Dataset):
         self.dataset = self._initialise_database()
         self.scene_ids = self.convert_scene_name_to_indices()
 
-        self.img_transform = lambda x: transforms.Compose([transforms.PILToTensor(), transforms.ConvertImageDtype(dtype=torch.float32), transforms.Resize(220)])(Image.open(x))
+        self.open_img = lambda x: transforms.Compose([transforms.PILToTensor(), transforms.ConvertImageDtype(dtype=torch.float32), transforms.Resize(220)])(Image.open(x))
+        
+        self.transforms = transform if transform else None
+        
 
     def _initialise_database(self):
         scene_name_to_token = {}
@@ -218,22 +221,29 @@ class CrossModalNuScenesDataset(Dataset):
         data_point = self.dataset[index]
         img_path = data_point[0]
         img_token = data_point[1]
-        img = self.img_transform(img_path)
+        img = self.open_img(img_path)
         pc = self.retrieve_relevant_pc(img_token)
         pc = self._pad_point_cloud(pc)
         
+        #self.visualise_point_cloud(pc, name="t + 2")
         # retrieve a point cloud from a random scene
         random_img_token = self.get_random_sample_token(img_token)
         pc_random = self.retrieve_relevant_pc(random_img_token)
         pc_random = self._pad_point_cloud(pc_random)
         
-        return [img, pc.T, img, pc_random.T]
+        # transform img
+        if self.transforms:
+            transformed_img = self.transforms(img)
+        else:
+            transformed_img = img
+        
+        return [img, pc.T, transformed_img, pc_random.T]
 
 
 
 if __name__ == "__main__":
     SENSORS = ["CAM_FRONT"]
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
-    dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-mini", split="mini_train")
+    dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-trainval", split="train")
     print(len(dataset))
-    print(len(dataset[0]))
+    print(len(dataset[2]))

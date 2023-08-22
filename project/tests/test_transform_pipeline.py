@@ -17,8 +17,8 @@ warnings.filterwarnings("ignore")
 
 SENSORS = ["CAM_FRONT"]
 data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
-dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-trainval", split="train")
-
+img_transforms = torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=3), torchvision.transforms.RandomCrop(200)])
+dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-mini", split="mini_train", transform=img_transforms)
 
 train_dataloader = torch.utils.data.DataLoader(
     dataset,
@@ -29,10 +29,11 @@ train_dataloader = torch.utils.data.DataLoader(
 )
 device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.set_float32_matmul_precision("medium")
+
 img_backbone = torchvision.models.resnet50()
 pc_backbone = PointNet(point_dim=4, return_local_features=False, device=device)
 model = Network(img_backbone, pc_backbone)
 model = model.to(device)
 
-trainer = pl.Trainer(max_epochs=100, accelerator=device, devices=1, fast_dev_run=True)
+trainer = pl.Trainer(max_epochs=100, accelerator=device, devices=1, fast_dev_run=False)
 trainer.fit(model, train_dataloader)
