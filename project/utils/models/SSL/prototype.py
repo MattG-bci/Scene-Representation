@@ -97,7 +97,9 @@ class Network(pl.LightningModule):
         super().__init__()
         self.img_backbone = nn.Sequential(*list(img_backbone.children())[:-1])
         self.point_backbone = point_backbone
-        self.cross_attention_module = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16)
+        self.cross_attention_module = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16, batch_first=True)
+        self.sigmoid = torch.nn.Sigmoid()
+        self.criterion = torch.nn.CrossEntropyLoss()
 
 
 
@@ -105,15 +107,40 @@ class Network(pl.LightningModule):
         imgs = x[0].float().to(self.device)
         pc = x[1].float().to(self.device)
         vision_features = self.img_backbone(imgs)
+        vision_features = vision_features.flatten(start_dim=1)
         pc_features, _ = self.point_backbone(pc)
-        attention_out, _ = self.cross_attention_module(vision_features.flatten(start_dim=1), pc_features.flatten(start_dim=1), pc_features.flatten(start_dim=1))
+        pc_features = pc_features.flatten(start_dim=1)
+        attention_out, _ = self.cross_attention_module(vision_features, pc_features, pc_features)
 
-        return vision_features, pc_features
+        fused_features = torch.cat([vision_features, attention_out], dim=1)
+        return fused_features
     
     def training_step(self, batch, batch_idx):
-        vision_features, pc_features = self.forward(batch)
-        #loss = self.criterion(vision_features, fused_features, epoch=self.current_epoch)
-        #return loss
+        original_fused_features = self.sigmoid(self.forward(batch[:2]))
+        random_fused_features = self.sigmoid(self.forward(batch[2:]))
+
+        loss = self.criterion(original_fused_features.flatten(), random_fused_features.flatten())
+        self.log_dict({
+            "train_loss": loss},
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True
+        )
+        return {"loss": loss}
+    
+    @torch.no_grad()
+    def validation_step(self, batch, batch_idx):
+        original_fused_features = self.sigmoid(self.forward(batch[:2]))
+        random_fused_features = self.sigmoid(self.forward(batch[2:]))
+
+        loss = self.criterion(original_fused_features.flatten(), random_fused_features.flatten())
+        self.log_dict({
+            "val_loss": loss},
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True
+        )
+        return {"val_loss": loss}
     
     def configure_optimizers(self):
         optim = torch.optim.AdamW(self.parameters(), lr=0.001, weight_decay=1e-7)

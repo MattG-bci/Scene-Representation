@@ -81,17 +81,17 @@ class NuScenesDataset(Dataset):
 
 
 class CrossModalNuScenesDataset(Dataset):
-    def __init__(self, data_path, sensors, split="train", version="v1.0-mini"):
-        self.nusc = self._get_nuscenes_db(data_path, version=version) #NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=False)
+    def __init__(self, data_path, sensors, split="train", version="v1.0-trainval", get_max_pts=False):
+        self.nusc = self._get_nuscenes_db(data_path, version=version)
         self.data_path = data_path
         self.sensors = sensors 
         self.split = split
-        self.max_pts = self._get_max_pc_points()
+        self.max_pts = self._get_max_pc_points() if get_max_pts else 3871 if version == "v1.0-trainval" else 3681# already known number, set as a constant to accelerate the dataloader initalisation.
         self.scene_names = self._get_scenes()
         self.dataset = self._initialise_database()
         self.scene_ids = self.convert_scene_name_to_indices()
 
-        self.img_transform = lambda x: transforms.Compose([transforms.PILToTensor(), transforms.ConvertImageDtype(dtype=torch.float32), transforms.Resize(224)])(Image.open(x))
+        self.img_transform = lambda x: transforms.Compose([transforms.PILToTensor(), transforms.ConvertImageDtype(dtype=torch.float32), transforms.Resize(220)])(Image.open(x))
 
     def _initialise_database(self):
         scene_name_to_token = {}
@@ -152,7 +152,6 @@ class CrossModalNuScenesDataset(Dataset):
     
     def get_random_sample_token(self, sample_token):
         # getting a random scene
-        #n_scenes = np.linspace(0, len(self.scene_ids) + 1, num=len(self.scene_ids) + 1, dtype=np.int32, endpoint=False)
         while True:
             n_random = random.choice(self.scene_ids)
             random_scene = self.nusc.scene[n_random]
