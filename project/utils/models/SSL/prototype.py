@@ -91,6 +91,12 @@ class BlenderModule(nn.Module):
         
         out = self.blender_network(fused_features)
         return out
+    
+def binary_cross_entropy(pred, y):
+    log_pred = torch.clamp(torch.log(pred), -100, 100)
+    log_y = torch.clamp(torch.log(y), -100, 100)
+    return -(log_pred*y + (1-y)*log_y).sum()
+    
 
 class Network(pl.LightningModule):
     def __init__(self, img_backbone, point_backbone) -> None:
@@ -99,8 +105,7 @@ class Network(pl.LightningModule):
         self.point_backbone = point_backbone
         self.cross_attention_module = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16, batch_first=True)
         self.sigmoid = torch.nn.Sigmoid()
-        self.criterion = torch.nn.BCELoss()
-
+        self.criterion = binary_cross_entropy
 
     def forward(self, x):
         imgs = x[0].float().to(self.device)

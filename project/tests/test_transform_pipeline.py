@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 SENSORS = ["CAM_FRONT"]
 data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
-img_transforms = torchvision.transforms.Compose([torchvision.transforms.Grayscale(num_output_channels=3), torchvision.transforms.RandomCrop(200)])
+img_transforms = torchvision.transforms.Compose([torchvision.transforms.RandomCrop(200)])
 dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-mini", split="mini_train", transform=img_transforms)
 
 train_dataloader = torch.utils.data.DataLoader(
