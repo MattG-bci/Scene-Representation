@@ -1,4 +1,5 @@
 import os
+import random
 
 import torch
 import numpy as np
@@ -80,7 +81,7 @@ class NuScenesDataset(Dataset):
 
 
 class CrossModalNuScenesDataset(Dataset):
-    def __init__(self, data_path, sensors, split="train", version="v1.0-mini", transform=None):
+    def __init__(self, data_path, sensors, split="train", version="v1.0-mini"):
         self.nusc = self._get_nuscenes_db(data_path, version=version) #NuScenes(version='v1.0-trainval', dataroot=data_path, verbose=False)
         self.data_path = data_path
         self.sensors = sensors 
@@ -88,12 +89,9 @@ class CrossModalNuScenesDataset(Dataset):
         self.max_pts = self._get_max_pc_points()
         self.scene_names = self._get_scenes()
         self.dataset = self._initialise_database()
+        self.scene_ids = self.convert_scene_name_to_indices()
 
-        if transform is None:
-            self.transform = transforms.Compose([transforms.PILToTensor(), 
-                                                transforms.ConvertImageDtype(torch.float32)])
-        else:
-            self.transform = transform
+        self.img_transform = lambda x: transforms.Compose([transforms.PILToTensor(), transforms.ConvertImageDtype(dtype=torch.float32), transforms.Resize(224)])(Image.open(x))
 
     def _initialise_database(self):
         scene_name_to_token = {}
@@ -119,7 +117,7 @@ class CrossModalNuScenesDataset(Dataset):
         return data
     
     def retrieve_relevant_pc(self, sample_token):
-        points_3d = self.nusc.render_pointcloud_in_image(sample_token, pointsensor_channel="LIDAR_TOP")
+        points_3d = self.nusc.render_pointcloud_in_image(sample_token, pointsensor_channel="LIDAR_TOP", verbose=False)
         return points_3d
     
     def _get_scenes(self):
@@ -133,9 +131,6 @@ class CrossModalNuScenesDataset(Dataset):
         samples = self.nusc.sample
         max_pts = 0
         for sample in samples:
-            #sample_pc_token = sample["data"]["LIDAR_TOP"]
-            #pc_path = self.nusc.get("sample_data", sample_pc_token)["filename"]
-            #pc_path = os.path.join(self.data_path, pc_path)
             pc = self.retrieve_relevant_pc(sample["token"])
             if pc.shape[1] > max_pts:
                 max_pts = pc.shape[1]
@@ -155,7 +150,37 @@ class CrossModalNuScenesDataset(Dataset):
             pc_padded = x[:, :self.max_pts]
         return pc_padded
     
-    def visualise_point_cloud(self, point_cloud, dim="3d"):
+    def get_random_sample_token(self, sample_token):
+        # getting a random scene
+        #n_scenes = np.linspace(0, len(self.scene_ids) + 1, num=len(self.scene_ids) + 1, dtype=np.int32, endpoint=False)
+        while True:
+            n_random = random.choice(self.scene_ids)
+            random_scene = self.nusc.scene[n_random]
+            all_samples = self.list_all_samples_of_scene(random_scene["token"])
+            random_sample = random.choice(all_samples)
+            if random_sample != sample_token:
+                break
+        return random_sample
+            
+    def list_all_samples_of_scene(self, scene_token):
+        scene = self.nusc.get("scene", scene_token)
+        sample = self.nusc.get("sample", scene["first_sample_token"])
+        samples = [sample["token"]]
+        while sample["next"] != "":
+            sample = self.nusc.get("sample", sample["next"])
+            samples.append(sample["token"])
+        return samples
+    
+    def convert_scene_name_to_indices(self):
+        scenes = self._get_scenes()
+        scene_ids = []
+        for idx, scene in enumerate(self.nusc.scene):
+            scene_name = scene["name"]
+            if scene_name in scenes:
+                scene_ids.append(idx)
+        return scene_ids
+    
+    def visualise_point_cloud(self, point_cloud, dim="3d", name="LiDAR"):
         assert dim in ["2d", "3d"], \
             "Dim for the visualidation not valid. Please use either \"2d\" or \"3d\"."
 
@@ -173,7 +198,8 @@ class CrossModalNuScenesDataset(Dataset):
             ax.set_zlabel("Z")
         ax.set_xlabel("X")
         ax.set_ylabel("Y")
-        plt.savefig(f"Transformed lidar plot {dim}.jpg")
+        plt.savefig(f"{name} - {dim}.jpg")
+        plt.close()
 
     @staticmethod
     def _init_nuscenes_db(data_root, version):
@@ -193,26 +219,22 @@ class CrossModalNuScenesDataset(Dataset):
         data_point = self.dataset[index]
         img_path = data_point[0]
         img_token = data_point[1]
-        #lidar = self._open_lidar(data_point[1])
-        img = transforms.PILToTensor()(Image.open(img_path))
+        img = self.img_transform(img_path)
         pc = self.retrieve_relevant_pc(img_token)
-        self.visualise_point_cloud(pc)
+        pc = self._pad_point_cloud(pc)
         
-        #if self.transform:
-        #    img, pc, img_transformed, pc_transformed = self.transform(img, lidar)
-        #    pc = self._pad_point_cloud(pc)
-        #    pc_transformed = self._pad_point_cloud(pc_transformed)
-        return img, pc#[img, pc.T, img_transformed, pc_transformed.T]
+        # retrieve a point cloud from a random scene
+        random_img_token = self.get_random_sample_token(img_token)
+        pc_random = self.retrieve_relevant_pc(random_img_token)
+        pc_random = self._pad_point_cloud(pc_random)
+        
+        return [img, pc.T, img, pc_random.T]
 
 
 
 if __name__ == "__main__":
     SENSORS = ["CAM_FRONT"]
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
-    transform = transforms.Compose([transforms.PILToTensor(),
-                                    transforms.Resize(size=224),
-                                    transforms.RandomAffine(degrees=0, translate=[0.1, 0.1], scale=[1.2, 1.2]), 
-                                    transforms.ConvertImageDtype(torch.float32)])
-    dataset = CrossModalNuScenesDataset(data_root, transform=transform, sensors=SENSORS, version="v1.0-mini", split="mini_train")
+    dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-mini", split="mini_train")
     print(len(dataset))
     print(len(dataset[0]))

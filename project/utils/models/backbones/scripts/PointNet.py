@@ -8,9 +8,10 @@ import torch.nn.functional as F
 
 
 class TransformationNet(nn.Module):
-  def __init__(self, input_dim, output_dim):
+  def __init__(self, input_dim, output_dim, device):
     super(TransformationNet, self).__init__()
     self.output_dim = output_dim
+    self.device = device
 
     self.conv1 = nn.Conv1d(input_dim, 64, 1)
     self.conv2 = nn.Conv1d(64, 128, 1)
@@ -40,21 +41,19 @@ class TransformationNet(nn.Module):
     x = F.relu(self.bn5(self.fc2(x)))
     x = self.fc3(x)
 
-    eye = torch.eye(self.output_dim)
-    #if torch.cuda.is_available():
-    #  eye = eye.cuda()
+    eye = torch.eye(self.output_dim).to(self.device)
 
     x = x.view(-1, self.output_dim, self.output_dim) + eye
     return x
   
 
-
 class PointNet(nn.Module):
-  def __init__(self, point_dim, return_local_features=False):
+  def __init__(self, point_dim, device, return_local_features=False):
     super(PointNet, self).__init__()
     self.return_local_features = return_local_features
-    self.input_transform = TransformationNet(input_dim=point_dim, output_dim=point_dim)
-    self.feature_transform = TransformationNet(input_dim=64, output_dim=64)
+    self.input_transform = TransformationNet(input_dim=point_dim, output_dim=point_dim, device=device)
+    self.feature_transform = TransformationNet(input_dim=64, output_dim=64, device=device)
+    self.device = device
 
     self.conv1 = nn.Conv1d(point_dim, 64, 1)
     self.conv2 = nn.Conv1d(64, 64, 1)
@@ -97,9 +96,10 @@ class PointNet(nn.Module):
 
 
 if __name__ == "__main__":
-    point_cloud = torch.rand(2, 38000, 3)
-    model = PointNet(point_dim=3, return_local_features=False)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    point_cloud = torch.rand(2, 3000, 4).to(device)
+    model = PointNet(point_dim=4, return_local_features=False, device=device)
+    model = model.to(device)
     x, features_transformed = model(point_cloud)
     print(x.shape)
     print(features_transformed.shape)
-
