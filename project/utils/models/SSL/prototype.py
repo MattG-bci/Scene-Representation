@@ -96,12 +96,13 @@ class ClippedBCELoss(nn.Module):
         self.clip_val = clip_val
         self.loss = nn.BCELoss()
         
-    def forward(self, x, y):
+    def forward(self, x, y, step="train"):
         loss = self.loss(x, y)
-        gradients = torch.autograd.grad(loss, x, create_graph=True)[0]
-        clipped_gradients = torch.clamp(gradients, -self.clip_val, self.clip_val)
-        clipped_loss = torch.sum(clipped_gradients * gradients)
-        return clipped_loss
+        if step == "train":
+            gradients = torch.autograd.grad(loss, x, create_graph=True)[0]
+            clipped_gradients = torch.clamp(gradients, -self.clip_val, self.clip_val)
+            loss = torch.sum(clipped_gradients * gradients)
+        return loss
     
 class Network(pl.LightningModule):
     def __init__(self, img_backbone, point_backbone) -> None:
@@ -126,21 +127,22 @@ class Network(pl.LightningModule):
         out = self.projection_head(fused_features)
         prediction = self.sigmoid(out)
         return prediction
-    
+
     def training_step(self, batch, batch_idx):
         original_pair, random_pair = batch
         original_pair_data = original_pair[:2]
         original_pair_label = original_pair[-1].float()
+        original_pair_prediction = self.forward(original_pair_data).squeeze(1)
+        original_pair_loss = self.criterion(original_pair_prediction, original_pair_label)
+        original_pair_prediction = torch.where(original_pair_prediction > 0.5, 1, 0)
+    
         random_pair_data = random_pair[:2]
         random_pair_label = random_pair[-1].float()
-        original_pair_prediction = self.forward(original_pair_data).squeeze(1)
         random_pair_prediction = self.forward(random_pair_data).squeeze(1)
-        
-        original_pair_loss = self.criterion(original_pair_prediction, original_pair_label)
         random_pair_loss = self.criterion(random_pair_prediction, random_pair_label)
-        total_loss = original_pair_loss + random_pair_loss
-        original_pair_prediction = torch.where(original_pair_prediction > 0.5, 1, 0)
         random_pair_prediction = torch.where(random_pair_prediction > 0.5, 0, 1)
+        
+        total_loss = original_pair_loss + random_pair_loss
         train_acc = self.compute_accuracy((original_pair_prediction, original_pair_label), 
                                           (random_pair_prediction, random_pair_label))
                 
@@ -163,8 +165,8 @@ class Network(pl.LightningModule):
         original_pair_prediction = self.forward(original_pair_data).squeeze(1)
         random_pair_prediction = self.forward(random_pair_data).squeeze(1)
         
-        original_pair_loss = self.criterion(original_pair_prediction, original_pair_label)
-        random_pair_loss = self.criterion(random_pair_prediction, random_pair_label)
+        original_pair_loss = self.criterion(original_pair_prediction, original_pair_label, step="val")
+        random_pair_loss = self.criterion(random_pair_prediction, random_pair_label, step="val")
         total_loss = original_pair_loss + random_pair_loss
         original_pair_prediction = torch.where(original_pair_prediction > 0.5, 1, 0)
         random_pair_prediction = torch.where(random_pair_prediction > 0.5, 0, 1)
