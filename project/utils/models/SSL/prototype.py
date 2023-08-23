@@ -124,42 +124,68 @@ class Network(pl.LightningModule):
 
         fused_features = torch.cat([vision_features, attention_out], dim=1)
         out = self.projection_head(fused_features)
-        return out
+        prediction = self.sigmoid(out)
+        return prediction
     
     def training_step(self, batch, batch_idx):
         original_pair, random_pair = batch
         original_pair_data = original_pair[:2]
-        original_pair_label = original_pair[-1]
+        original_pair_label = original_pair[-1].float()
         random_pair_data = random_pair[:2]
-        random_pair_label = random_pair[-1]
-        original_pair_prediction = self.sigmoid(self.forward(original_pair_data))
-        random_pair_prediction = self.sigmoid(self.forward(random_pair_data))
+        random_pair_label = random_pair[-1].float()
+        original_pair_prediction = self.forward(original_pair_data).squeeze(1)
+        random_pair_prediction = self.forward(random_pair_data).squeeze(1)
         
-        original_pair_loss = self.criterion(original_pair_prediction.squeeze(1), original_pair_label.float())
-        random_pair_loss = self.criterion(random_pair_prediction.squeeze(1), random_pair_label.float())
+        original_pair_loss = self.criterion(original_pair_prediction, original_pair_label)
+        random_pair_loss = self.criterion(random_pair_prediction, random_pair_label)
         total_loss = original_pair_loss + random_pair_loss
+        original_pair_prediction = torch.where(original_pair_prediction > 0.5, 1, 0)
+        random_pair_prediction = torch.where(random_pair_prediction > 0.5, 0, 1)
+        train_acc = self.compute_accuracy((original_pair_prediction, original_pair_label), 
+                                          (random_pair_prediction, random_pair_label))
                 
         self.log_dict({
-            "train_loss": total_loss},
+            "train_loss": total_loss,
+            "train_accuracy": train_acc},
             on_step=True,
             on_epoch=True,
             prog_bar=True
         )
-        return {"loss": total_loss}
+        return {"loss": total_loss, "train_accuracy": train_acc}
     
     @torch.no_grad()
     def validation_step(self, batch, batch_idx):
-        original_fused_features = self.sigmoid(self.forward(batch[:2]))
-        random_fused_features = self.sigmoid(self.forward(batch[2:]))
-
-        loss = self.criterion(original_fused_features.flatten(), random_fused_features.flatten())
+        original_pair, random_pair = batch
+        original_pair_data = original_pair[:2]
+        original_pair_label = original_pair[-1].float()
+        random_pair_data = random_pair[:2]
+        random_pair_label = random_pair[-1].float()
+        original_pair_prediction = self.forward(original_pair_data).squeeze(1)
+        random_pair_prediction = self.forward(random_pair_data).squeeze(1)
+        
+        original_pair_loss = self.criterion(original_pair_prediction, original_pair_label)
+        random_pair_loss = self.criterion(random_pair_prediction, random_pair_label)
+        total_loss = original_pair_loss + random_pair_loss
+        original_pair_prediction = torch.where(original_pair_prediction > 0.5, 1, 0)
+        random_pair_prediction = torch.where(random_pair_prediction > 0.5, 0, 1)
+        val_acc = self.compute_accuracy((original_pair_prediction, original_pair_label), 
+                                          (random_pair_prediction, random_pair_label))
         self.log_dict({
-            "val_loss": loss},
+            "val_loss": total_loss,
+            "val_accuracy": val_acc},
             on_step=True,
             on_epoch=True,
             prog_bar=True
         )
-        return {"val_loss": loss}
+        return {"val_loss": total_loss, "val_accuracy": val_acc}
+    
+    def compute_accuracy(self, pair1, pair2):
+        tp = torch.sum(pair1[0] == pair1[1])
+        fn = len(pair1[0]) - tp
+        
+        tn = torch.sum(pair2[0] == pair2[1])
+        fp = len(pair2[0]) - tn
+        return (tp) / (tp + tn + fp + fn)
     
     def configure_optimizers(self):
         optim = torch.optim.AdamW(self.parameters(), lr=0.001, weight_decay=1e-7)
