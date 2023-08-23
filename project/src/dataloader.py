@@ -237,13 +237,17 @@ class CrossModalNuScenesDataset(Dataset):
         else:
             transformed_img = img
         
-        return [img, pc.T, transformed_img, pc_random.T]
+        return [img, pc.T, 1.0], [transformed_img, pc_random.T, 0.0] # adding pseudo-labels as a third entry of each array
 
 
 
 if __name__ == "__main__":
     SENSORS = ["CAM_FRONT"]
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
-    dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-trainval", split="train")
+    dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-mini", split="mini_train")
     print(len(dataset))
-    print(len(dataset[2]))
+    pair_1, pair_2 = dataset[0]
+    print(len(pair_1))
+    print(pair_1[0].shape)
+    print(pair_1[1].shape)
+    print(pair_1[2])

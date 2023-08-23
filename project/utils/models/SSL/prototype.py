@@ -65,9 +65,9 @@ class CrossAttentionModule(nn.Module):
         output = self.output_projection(attention_output)
         return output
 
-class BlenderModule(nn.Module):
+class NetworkProjectionHead(nn.Module):
     def __init__(self, in_features, hidden_features, out_features, n_layers=2):
-        super(BlenderModule, self).__init__()
+        super(NetworkProjectionHead, self).__init__()
         self.in_features = in_features
         layers = []
         
@@ -81,31 +81,37 @@ class BlenderModule(nn.Module):
                            nn.BatchNorm1d(hidden_features)])
         layers = [layers[i][j] for i in range(len(layers)) for j in range(len(layers[i]))]
         layers.append(nn.Linear(in_features=hidden_features, out_features=out_features))
-        self.blender_network = nn.Sequential(*layers)
+        self.projection_network = nn.Sequential(*layers)
     
-    def forward(self, features_1, features_2):
-        fused_features = torch.cat([features_1, features_2], dim=1).squeeze(-1)
+    def forward(self, x):
+        assert x.shape[1] == self.in_features, \
+            f"Mismatch of dimensions. Got input of dimension {x.shape} but defined {self.in_features} as input features."
         
-        assert fused_features.shape[1] == self.in_features, \
-            f"Mismatch of dimensions. Got input of dimension {fused_features.shape} but defined {self.in_features} as input features."
-        
-        out = self.blender_network(fused_features)
+        out = self.projection_network(x)
         return out
     
-def binary_cross_entropy(pred, y):
-    log_pred = torch.clamp(torch.log(pred), -100, 100)
-    log_y = torch.clamp(torch.log(y), -100, 100)
-    return -(log_pred*y + (1-y)*log_y).sum()
+class ClippedBCELoss(nn.Module):
+    def __init__(self, clip_val) -> None:
+        super(ClippedBCELoss, self).__init__()
+        self.clip_val = clip_val
+        self.loss = nn.BCELoss()
+        
+    def forward(self, x, y):
+        loss = self.loss(x, y)
+        gradients = torch.autograd.grad(loss, x, create_graph=True)[0]
+        clipped_gradients = torch.clamp(gradients, -self.clip_val, self.clip_val)
+        clipped_loss = torch.sum(clipped_gradients * gradients)
+        return clipped_loss
     
-
 class Network(pl.LightningModule):
     def __init__(self, img_backbone, point_backbone) -> None:
         super().__init__()
         self.img_backbone = nn.Sequential(*list(img_backbone.children())[:-1])
         self.point_backbone = point_backbone
         self.cross_attention_module = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16, batch_first=True)
+        self.projection_head = NetworkProjectionHead(4096, 2048, 1, n_layers=2)
         self.sigmoid = torch.nn.Sigmoid()
-        self.criterion = binary_cross_entropy
+        self.criterion = ClippedBCELoss(clip_val=100.0)
 
     def forward(self, x):
         imgs = x[0].float().to(self.device)
@@ -117,16 +123,22 @@ class Network(pl.LightningModule):
         attention_out, _ = self.cross_attention_module(vision_features, pc_features, pc_features)
 
         fused_features = torch.cat([vision_features, attention_out], dim=1)
-        return fused_features
+        out = self.projection_head(fused_features)
+        return out
     
     def training_step(self, batch, batch_idx):
-        original_fused_features = self.sigmoid(self.forward(batch[:2]))
-        random_fused_features = self.sigmoid(self.forward(batch[2:]))
-        total_loss = 0
-        for i in range(len(original_fused_features)):
-            loss = self.criterion(original_fused_features[i], random_fused_features[i])
-            total_loss += loss
-        total_loss /= len(original_fused_features)
+        original_pair, random_pair = batch
+        original_pair_data = original_pair[:2]
+        original_pair_label = original_pair[-1]
+        random_pair_data = random_pair[:2]
+        random_pair_label = random_pair[-1]
+        original_pair_prediction = self.sigmoid(self.forward(original_pair_data))
+        random_pair_prediction = self.sigmoid(self.forward(random_pair_data))
+        
+        original_pair_loss = self.criterion(original_pair_prediction.squeeze(1), original_pair_label.float())
+        random_pair_loss = self.criterion(random_pair_prediction.squeeze(1), random_pair_label.float())
+        total_loss = original_pair_loss + random_pair_loss
+                
         self.log_dict({
             "train_loss": total_loss},
             on_step=True,

@@ -35,5 +35,5 @@ pc_backbone = PointNet(point_dim=4, return_local_features=False, device=device)
 model = Network(img_backbone, pc_backbone)
 model = model.to(device)
 
-trainer = pl.Trainer(max_epochs=100, accelerator=device, devices=1, fast_dev_run=False)
+trainer = pl.Trainer(max_epochs=100, accelerator=device, devices=1, fast_dev_run=False, gradient_clip_val=0.5)
 trainer.fit(model, train_dataloader)
