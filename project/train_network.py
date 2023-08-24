@@ -27,7 +27,7 @@ val_dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, transform=No
 
 train_dataloader = torch.utils.data.DataLoader(
     train_dataset,
-    batch_size=30,
+    batch_size=24,
     shuffle=True,
     drop_last=False,
     num_workers=4
@@ -35,7 +35,7 @@ train_dataloader = torch.utils.data.DataLoader(
 
 val_dataloader = torch.utils.data.DataLoader(
     val_dataset,
-    batch_size=30,
+    batch_size=24,
     shuffle=False,
     drop_last=False,
     num_workers=4

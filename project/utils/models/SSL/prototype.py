@@ -140,7 +140,7 @@ class Network(pl.LightningModule):
         random_pair_label = random_pair[-1].float()
         random_pair_prediction = self.forward(random_pair_data).squeeze(1)
         random_pair_loss = self.criterion(random_pair_prediction, random_pair_label)
-        random_pair_prediction = torch.where(random_pair_prediction > 0.5, 0, 1)
+        random_pair_prediction = torch.where(random_pair_prediction > 0.5, 1, 0)
         
         total_loss = original_pair_loss + random_pair_loss
         train_acc = self.compute_accuracy((original_pair_prediction, original_pair_label), 
@@ -169,7 +169,7 @@ class Network(pl.LightningModule):
         random_pair_loss = self.criterion(random_pair_prediction, random_pair_label, step="val")
         total_loss = original_pair_loss + random_pair_loss
         original_pair_prediction = torch.where(original_pair_prediction > 0.5, 1, 0)
-        random_pair_prediction = torch.where(random_pair_prediction > 0.5, 0, 1)
+        random_pair_prediction = torch.where(random_pair_prediction > 0.5, 1, 0)
         val_acc = self.compute_accuracy((original_pair_prediction, original_pair_label), 
                                           (random_pair_prediction, random_pair_label))
         self.log_dict({
