@@ -73,7 +73,7 @@ if __name__ == "__main__":
     torch.set_grad_enabled(False)
     backbone = torchvision.models.resnet50()
     backbone.fc = nn.Sequential()
-    backbone.load_state_dict(torch.load("/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/carnet_depth_rn50_backbone.pth"))
+    backbone.load_state_dict(torch.load("/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/bdd_det_rn50_backbone.pth"))
     
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
     SENSORS = ["CAM_FRONT"]
