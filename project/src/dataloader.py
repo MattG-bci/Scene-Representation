@@ -163,7 +163,48 @@ class CrossModalNuScenesDataset(Dataset):
             if random_sample != sample_token:
                 break
         return random_sample
+    
+    def get_neighbour_sample_token(self, sample_token, span=1.0):
+        step = span / 0.5
+        sample = self.nusc.get("sample", sample_token)
+        neighbours = []
+        count = 0
+        prev = self.nusc.get("sample", sample["prev"]) if sample["prev"] != "" else ""
+        next = self.nusc.get("sample", sample["next"]) if sample["next"] != "" else ""
+
+        while count < step:
+            if prev != "":
+                if prev["prev"] != "":
+                    prev = self.nusc.get("sample", prev["prev"])
             
+            if next != "":
+                if next["next"] != "":
+                    next = self.nusc.get("sample", next["next"])
+            count += 1
+        
+        if prev != "":      
+            neighbours.append(prev["token"])
+        
+        if next != "":
+            neighbours.append(next["token"])
+        
+        
+        
+        #if sample["prev"] != "":
+        #    neighbour_sample = sample
+        #    for _ in range(int(step)):
+        #        neighbour_sample = self.nusc.get("sample", neighbour_sample["prev"])
+        #    neighbours.append(neighbour_sample["token"])
+        
+        #if sample["next"] != "":
+        #    neighbour_sample = sample
+        #    for _ in range(int(step)):
+        #        neighbour_sample = self.nusc.get("sample", neighbour_sample["next"])
+        #    neighbours.append(neighbour_sample["token"])
+        
+        neighbour_sample_token = neighbours[0] #random.choice(neighbours)
+        return neighbour_sample_token
+         
     def list_all_samples_of_scene(self, scene_token):
         scene = self.nusc.get("scene", scene_token)
         sample = self.nusc.get("sample", scene["first_sample_token"])
@@ -227,8 +268,12 @@ class CrossModalNuScenesDataset(Dataset):
         
         #self.visualise_point_cloud(pc, name="t + 2")
         # retrieve a point cloud from a random scene
-        random_img_token = self.get_random_sample_token(img_token)
-        pc_random = self.retrieve_relevant_pc(random_img_token)
+        
+        #random_img_token = self.get_random_sample_token(img_token)
+        token = self.get_neighbour_sample_token(img_token, span=1.0)
+        pc_random = self.retrieve_relevant_pc(token)
+        self.visualise_point_cloud(pc, name="original")
+        self.visualise_point_cloud(pc_random, name="neighbour")
         pc_random = self._pad_point_cloud(pc_random)
         
         # transform img
@@ -246,7 +291,7 @@ if __name__ == "__main__":
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
     dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-mini", split="mini_train")
     print(len(dataset))
-    pair_1, pair_2 = dataset[0]
+    pair_1, pair_2 = dataset[-1]
     print(len(pair_1))
     print(pair_1[0].shape)
     print(pair_1[1].shape)

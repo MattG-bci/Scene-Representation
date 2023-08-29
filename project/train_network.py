@@ -44,7 +44,7 @@ val_dataloader = torch.utils.data.DataLoader(
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.set_float32_matmul_precision("medium")
-    logger = TensorBoardLogger("/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs", name="Network - NuScenes")
+    logger = TensorBoardLogger("/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs", name="Network - NuScenes", version="Neighbour point cloud")
     checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min")
     #early_stopping_callback = EarlyStopping(monitor="val_loss", mode="min")
 
