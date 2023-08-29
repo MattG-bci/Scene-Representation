@@ -187,7 +187,7 @@ class Network(pl.LightningModule):
         
         tn = torch.sum(pair2[0] == pair2[1])
         fp = len(pair2[0]) - tn
-        return (tp) / (tp + tn + fp + fn)
+        return (tp + tn) / (tp + tn + fp + fn)
     
     def configure_optimizers(self):
         optim = torch.optim.AdamW(self.parameters(), lr=0.001, weight_decay=1e-7)

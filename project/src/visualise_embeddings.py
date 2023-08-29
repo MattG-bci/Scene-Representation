@@ -56,9 +56,9 @@ def plot_embeddings(network, dataloader, save_components=True):
     plt.figure(figsize=(12, 12))
     plt.grid()
     plt.scatter(tsne[:, 0], tsne[:, 1])
-    #for i, point in enumerate(tsne):
-    #    if i % 19 == 0:
-    #        plt.annotate(str(i), point)
+    for i, point in enumerate(tsne):
+        if i % 19 == 0:
+            plt.annotate(str(i), point)
     plt.xlabel("CP1", fontsize=16)
     plt.ylabel("CP2", fontsize=16)
     plt.xticks(fontsize=16)
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     torch.set_grad_enabled(False)
     backbone = torchvision.models.resnet50()
     backbone.fc = nn.Sequential()
-    backbone.load_state_dict(torch.load("/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/bdd_det_rn50_backbone.pth"))
+    backbone.load_state_dict(torch.load("/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/multimodal_network_rn50.pth"))
     
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
     SENSORS = ["CAM_FRONT"]

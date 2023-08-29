@@ -14,7 +14,7 @@ def  cluster_embeddings(path, n_clusters, return_plot=True):
     labels = model.fit_predict(X)
     sse = model.inertia_
     name = (path.split("/")[-1]).split(".")[0]
-    colors = ["r", "tab:blue", "g", "orange", "tab:purple", "tab:pink", "tab:cyan", 
+    colors = ["g", "tab:pink", "r", "orange", "tab:blue", "tab:purple", "tab:cyan", 
               "tab:olive", "magenta", "yellow", "gray", "slateblue", "lime", "peru"]
     
     if return_plot:
@@ -52,7 +52,8 @@ def plot_elbow_figure(path, max_n_clusters):
 
 if __name__ == "__main__":
     np.random.seed(1)
-    path = "/home/ubuntu/users/mateusz/Scene-Representation/project/src/output_embeddings/imagenet.csv"
-    plot_elbow_figure(path, max_n_clusters=12)
+    path = "/home/ubuntu/users/mateusz/Scene-Representation/project/src/output_embeddings/depth.csv"
+    error = cluster_embeddings(path, n_clusters=6)
+    #plot_elbow_figure(path, max_n_clusters=12)
     
     
