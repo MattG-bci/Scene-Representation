@@ -29,7 +29,7 @@ def extract_weights_from_pickle(path, model):
     return new_state_dict
 
 if __name__ == "__main__":
-    path =  "/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs/Network - NuScenes/version_5/checkpoints/epoch=21-step=25806.ckpt"
+    path =  "/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs/Network - NuScenes/Neighbour point cloud/checkpoints/epoch=41-step=49266.ckpt"
     model = torchvision.models.resnet50()
     model.fc = torch.nn.Sequential()
     #sys.path.insert(0, "../")
@@ -37,6 +37,6 @@ if __name__ == "__main__":
     state_dict = extract_weights(path, model)
     #backbone = load_backbone(path, DINO, model, "student_backbone")
     model.load_state_dict(state_dict)
-    torch.save(model.state_dict(), "/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/multimodal_network_rn50.pth")
+    torch.save(model.state_dict(), "/home/ubuntu/users/mateusz/Scene-Representation/project/utils/models/backbones/weights/multimodal_network_rn50_neighbour.pth")
 
 
