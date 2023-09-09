@@ -65,6 +65,18 @@ class CrossAttentionModule(nn.Module):
         output = self.output_projection(attention_output)
         return output
 
+
+class BlenderModule(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(BlenderModule, self).__init__()
+        self.conv = nn.Conv1d(in_channels=in_channels, out_channels=out_channels, kernel_size=1)
+    
+    def forward(self, imgs, pcs):
+        fused_features = torch.cat([imgs, pcs], dim=1)
+        out = self.conv(fused_features.unsqueeze(-1))
+        return out.squeeze(-1)
+
+
 class NetworkProjectionHead(nn.Module):
     def __init__(self, in_features, hidden_features, out_features, n_layers=2):
         super(NetworkProjectionHead, self).__init__()
@@ -109,7 +121,8 @@ class Network(pl.LightningModule):
         super().__init__()
         self.img_backbone = nn.Sequential(*list(img_backbone.children())[:-1])
         self.point_backbone = point_backbone
-        self.cross_attention_module = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16, batch_first=True)
+        #self.cross_attention_module = torch.nn.MultiheadAttention(embed_dim=2048, num_heads=16, batch_first=True)
+        self.blender_module = BlenderModule(4096, 2048)
         self.projection_head = NetworkProjectionHead(4096, 2048, 1, n_layers=2)
         self.sigmoid = torch.nn.Sigmoid()
         self.criterion = ClippedBCELoss(clip_val=100.0)
@@ -121,9 +134,10 @@ class Network(pl.LightningModule):
         vision_features = vision_features.flatten(start_dim=1)
         pc_features, _ = self.point_backbone(pc)
         pc_features = pc_features.flatten(start_dim=1)
-        attention_out, _ = self.cross_attention_module(vision_features, pc_features, pc_features)
+        #attention_out, _ = self.cross_attention_module(vision_features, pc_features, pc_features)
+        out = self.blender_module(vision_features, pc_features)
 
-        fused_features = torch.cat([vision_features, attention_out], dim=1)
+        fused_features = torch.cat([vision_features, out], dim=1)
         out = self.projection_head(fused_features)
         prediction = self.sigmoid(out)
         return prediction
@@ -199,13 +213,13 @@ if __name__ == "__main__":
     sys.path.insert(0, "../../")
     from models.backbones.scripts.PointNet import PointNet
     #from transforms.protonet_transform import ProtoNetTransform
-        
+    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     img_backbone = torchvision.models.resnet50()
-    point_backbone = PointNet(point_dim=4, return_local_features=False)
+    point_backbone = PointNet(point_dim=4, return_local_features=False, device=device)
     model = Network(img_backbone, point_backbone)
     point_cloud = torch.rand(2, 3000, 4)
     imgs = torch.rand(2, 3, 224, 224)
-    accelerator = "cuda" if torch.cuda.is_available() else "cpu"
     
     
     class CustomDataset(torch.utils.data.Dataset):
@@ -217,7 +231,7 @@ if __name__ == "__main__":
             return len(self.img)
         
         def __getitem__(self, idx):
-            return self.img[idx], self.pc[idx]
+            return [self.img[idx], self.pc[idx], 1], [self.img[idx], self.pc[idx], 0]
 
     dataset = CustomDataset(imgs, point_cloud)
     dataloader = torch.utils.data.DataLoader(
@@ -228,8 +242,12 @@ if __name__ == "__main__":
         num_workers=4
     )
     
+    #img_features = torch.rand(2, 2048)
+    #pc_features = torch.rand(2, 2048)
+    #blender_module = BlenderModule(in_channels=4096, out_channels=2048) # B x 2 * Fdim
+    #print(blender_module(img_features, pc_features).shape)
     #print(model.training_step([imgs, point_cloud], 0))
-    trainer = pl.Trainer(max_epochs=100, accelerator=accelerator, devices=1, fast_dev_run=True)
+    trainer = pl.Trainer(max_epochs=100, accelerator=device, devices=1, fast_dev_run=False)
     trainer.fit(model, dataloader)
 
     

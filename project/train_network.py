@@ -44,8 +44,9 @@ val_dataloader = torch.utils.data.DataLoader(
 if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.set_float32_matmul_precision("medium")
-    logger = TensorBoardLogger("/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs", name="Network - NuScenes", version="Neighbour point cloud")
-    checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min")
+    logger = TensorBoardLogger("/home/ubuntu/users/mateusz/Scene-Representation/project/tb_logs", name="Network - NuScenes", version="Neighbour point cloud (0.5 s)")
+    val_checkpoint_callback = ModelCheckpoint(monitor="val_loss", mode="min")
+    last_checkpoint_callback = ModelCheckpoint(save_top_k=1, monitor="epoch", mode="max")
     #early_stopping_callback = EarlyStopping(monitor="val_loss", mode="min")
 
     img_backbone = torchvision.models.resnet50()
@@ -53,5 +54,5 @@ if __name__ == "__main__":
     model = Network(img_backbone, pc_backbone)
     model = model.to(device)
 
-    trainer = pl.Trainer(max_epochs=100, accelerator=device, logger=logger, devices=1, callbacks=[checkpoint_callback], fast_dev_run=False)
+    trainer = pl.Trainer(max_epochs=100, accelerator=device, logger=logger, devices=1, callbacks=[val_checkpoint_callback, last_checkpoint_callback], fast_dev_run=False)
     trainer.fit(model, train_dataloader, val_dataloader)

@@ -27,7 +27,7 @@ def  cluster_embeddings(path, n_clusters, return_plot=True):
         plt.legend()
         plt.xlabel("CP1")
         plt.ylabel("CP2")
-        plt.title(f"{name.upper()}")
+        plt.title("DEPTH CARNet")
         plt.savefig(f"Clusters - {name.upper()}.jpg")
         plt.close()
     return sse

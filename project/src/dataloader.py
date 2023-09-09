@@ -4,6 +4,7 @@ import random
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import open3d as o3d
 from nuscenes import NuScenes
 from nuscenes.utils.data_classes import LidarPointCloud
 from nuscenes.utils.splits import create_splits_scenes
@@ -239,6 +240,11 @@ class CrossModalNuScenesDataset(Dataset):
         if NUSC is None:
             NUSC = self._init_nuscenes_db(data_root, version)
         return NUSC
+    
+    def save_point_cloud(self, pc, name="pc"):
+        pts = o3d.geometry.PointCloud()
+        pts.points = o3d.utility.Vector3dVector(pc.T[:, :3])
+        o3d.io.write_point_cloud(f"{name}.pcd", pts)
                  
     def __len__(self):
         return len(self.dataset)
@@ -252,9 +258,10 @@ class CrossModalNuScenesDataset(Dataset):
         pc = self._pad_point_cloud(pc)
         
         # retrieve a point cloud from a neighbour scene
-        token = self.get_neighbour_sample_token(img_token, span=1.0)
-        pc_random = self.retrieve_relevant_pc(token)
-        pc_random = self._pad_point_cloud(pc_random)
+        token = self.get_neighbour_sample_token(img_token, span=0.5)
+        pc_neighbour = self.retrieve_relevant_pc(token)
+        pc_neighbour = self._pad_point_cloud(pc_neighbour)
+    
         
         # transform img
         if self.transforms:
@@ -262,16 +269,16 @@ class CrossModalNuScenesDataset(Dataset):
         else:
             transformed_img = img
         
-        return [img, pc.T, 1.0], [transformed_img, pc_random.T, 0.0] # adding pseudo-labels as a third entry of each array
+        return [img, pc.T, 1.0], [transformed_img, pc_neighbour.T, 0.0] # adding pseudo-labels as a third entry of each array
 
 
 
 if __name__ == "__main__":
     SENSORS = ["CAM_FRONT"]
     data_root = "/home/ubuntu/users/mateusz/data/nuscenes"
-    dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-mini", split="mini_train")
+    dataset = CrossModalNuScenesDataset(data_root, sensors=SENSORS, version="v1.0-trainval", split="train")
     print(len(dataset))
-    pair_1, pair_2 = dataset[-1]
+    pair_1, pair_2 = dataset[420]
     print(len(pair_1))
     print(pair_1[0].shape)
     print(pair_1[1].shape)
